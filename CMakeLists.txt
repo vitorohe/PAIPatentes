@@ -1,0 +1,7 @@
+cmake_minimum_required(VERSION 2.8)
+project( tarea-2 )
+find_package( OpenCV REQUIRED )
+include_directories("${CMAKE_SOURCE_DIR}")
+add_library(funciones funciones.cpp funciones.h)
+add_executable( main main.cpp )
+target_link_libraries( main funciones ${OpenCV_LIBS} )
