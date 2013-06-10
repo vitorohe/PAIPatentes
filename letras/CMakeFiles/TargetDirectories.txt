@@ -1,0 +1,1 @@
+/home/vito/11vo semestre/Procesamiento y Análisis de Imágenes/Proyecto/PAIPatentes/letras/CMakeFiles/letters.dir

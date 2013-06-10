@@ -68,6 +68,34 @@ int Funciones::umbralOtsu(Mat imagen){
 	return umbral;
 }
 
+Mat Funciones::ecualizar(Mat input)
+{
+	//asumimos input esta en escala de grises
+	Mat hist=histograma(input);
+	Mat ecu=Mat(input.size(), input.type());
+	float acum[256];
+	int i=0, j=0;
+	hist.convertTo(hist,CV_32F);
+	acum[0]=hist.at<float>(0,0);
+
+	for(i=1;i<256;i++)
+	{
+		acum[i]=hist.at<float>(i,0)+acum[i-1];
+	}
+
+	uchar val=0;
+
+	for(i=0;i<input.size().height;i++)
+	{
+		for(j=0;j<input.size().width;j++)
+		{
+			val=(uchar)floor((255.0/(input.size().height*input.size().width))*acum[input.at<uchar>(i,j)]);
+			ecu.at<uchar>(i,j)=val;
+		}
+	}
+	return ecu;
+}
+
 vector<vector<Point> > Funciones::get_contours(Mat input, vector<Vec4i>& hierarchy){
 	vector<vector<Point> > contours;
 

@@ -11,6 +11,7 @@ public:
 	Funciones();
 	static int umbralOtsu(Mat input);
 	static Mat histograma(Mat input);
+	static Mat ecualizar(Mat input);
 	static vector<vector<Point> > get_contours(Mat input, vector<Vec4i>& hierarchy);
 
 };
