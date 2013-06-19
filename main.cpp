@@ -174,20 +174,20 @@ void train(){
 	struct dirent *dirp;
 	struct stat filestat;
 
-	float labels[220];
-	for (int i = 0; i < 220; ++i)
+	float labels[110+2330];
+	for (int i = 0; i < 110+2330; ++i)
 	{
 		if (i < 110){
 			labels[i] = 1.0;
 		}
 		else{
-			labels[i] = -1.0;
+			labels[i] = 0.0;
 		}
 	}
 	
-	Mat labelsMat(220, 1, CV_32FC1, labels);
+	Mat labelsMat(110+2330, 1, CV_32FC1, labels);
 	// Mat trainingDataMat(220, 256*6, CV_32FC1);
-	Mat trainingDataMat(220, 3780, CV_32FC1);
+	Mat trainingDataMat(110+2330, 3780, CV_32FC1);
 
 
 	int index = 0;
@@ -232,24 +232,36 @@ void train(){
 
 	closedir( dp );
 
+	ofstream data;
+	data.open ("patente_no_patente.lsvm");
+	for (int i = 0; i < trainingDataMat.size().height; ++i)
+	{
+		data << labelsMat.at<float>(i,0) <<".0";
+		for(int j=0; j < trainingDataMat.size().width; ++j){
+			data << " " << j <<":"<<trainingDataMat.at<float>(i,j);
+		}
+		data << "\n";
+	}
+	data.close();
+
 	// Set up SVM's parameters
-	CvSVMParams params;
-	params.svm_type    = CvSVM::C_SVC;
-	params.kernel_type = CvSVM::POLY;
-	params.degree = 2;
-	params.p = 0;
-	params.nu = 0;
-	params.C = 1;
-	params.coef0 = 0;
-	params.gamma = 2;
-	params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
+	// CvSVMParams params;
+	// params.svm_type    = CvSVM::C_SVC;
+	// params.kernel_type = CvSVM::POLY;
+	// params.degree = 2;
+	// params.p = 0;
+	// params.nu = 0;
+	// params.C = 1;
+	// params.coef0 = 0;
+	// params.gamma = 2;
+	// params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
 	// cout<<labelsMat<<endl;
 	// cout<<trainingDataMat<<endl;
 
 	// Train the SVM
-	CvSVM SVM;
-	SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
-	SVM.save("model.xml");
+	// CvSVM SVM;
+	// SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
+	// SVM.save("model.xml");
 }
 bool is_patente(string filename_to_test, Mat image_to_test, int type){
 	CvSVM SVM;
@@ -408,6 +420,66 @@ int search_patent(string filename, string filename_seg, int factor){
 	}
 
 	return index;
+}
+
+int cut_no_patente(string dir){
+	
+	string filepath;
+	DIR *dp;
+	struct dirent *dirp;
+	struct stat filestat;
+
+	int index = 111;
+
+	dp = opendir( dir.c_str() );
+	if (dp == NULL)
+	{
+		cout << "Error(" << errno << ") opening " << dir << endl;
+	}
+
+	while ((dirp = readdir( dp )))
+	{
+		filepath = dir + "/" + dirp->d_name;
+
+		// If the file is a directory (or is in some way invalid) we'll skip it 
+		if (stat( filepath.c_str(), &filestat )) continue;
+		if (S_ISDIR( filestat.st_mode ))         continue;
+		
+		Mat image = imread(filepath, 1);
+		if (image.empty()) {
+			printf("Error: image '%s' is empty, features calculation skipped!\n", filepath.c_str());
+			return 0;
+		}
+
+		int width = image.size().width;
+		int height = image.size().height;
+		
+		int width_rect = 120;
+		int height_rect = 40;
+
+		string p;
+		Mat rect;
+
+		for (int i = height/3; i + height_rect < height; i = i+height_rect*2)
+		{
+			for (int j = 0; j + width_rect < width; j = j+width_rect*2)
+			{
+				rect = image(Rect(j,i,width_rect,height_rect));
+				
+				ostringstream string_i;
+				string_i << index;
+				string s(string_i.str());
+				
+				if(index < 1000)
+					s = "0" + s;
+				
+				// cout<<s<<endl;
+				index++;
+				imwrite("no_patente/np" + s + ".jpg",rect);
+				
+			}
+		}
+	}
 }
 
 class comparator{
@@ -596,7 +668,9 @@ int main(int argc, char *argv[]){
 				cout<<"is NOT patente"<<endl;
 			}
 		else if(param.compare("-g") == 0)
-			segment_image(argv[2]);	
+			segment_image(argv[2]);
+		else if(param.compare("-np") == 0)
+			cut_no_patente(argv[2]);
 	}
 	else if(argc == 4){
 		string param = argv[1];
@@ -613,169 +687,3 @@ int main(int argc, char *argv[]){
 	}
 
 }
-
-// int main()
-// {
-//     // Data for visual representation
-// 	int width = 512, height = 512;
-// 	Mat image = Mat::zeros(height, width, CV_8UC3);
-
-//     // Set up training data
-// 	float labels[4] = {1.0, -1.0, -1.0, -1.0};
-// 	Mat labelsMat(4, 1, CV_32FC1, labels);
-
-// 	float trainingData[4][2] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
-// 	Mat trainingDataMat(4, 2, CV_32FC1, trainingData);
-
-//     // Set up SVM's parameters
-// 	CvSVMParams params;
-// 	params.svm_type    = CvSVM::C_SVC;
-// 	params.kernel_type = CvSVM::LINEAR;
-// 	params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
-
-//     // Train the SVM
-//  CvSVM SVM;
-// 	SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
-
-// 	Vec3b green(0,255,0), blue (255,0,0);
-//     // Show the decision regions given by the SVM
-// 	for (int i = 0; i < image.rows; ++i)
-// 		for (int j = 0; j < image.cols; ++j)
-// 		{
-// 			Mat sampleMat = (Mat_<float>(1,2) << i,j);
-// 			float response = SVM.predict(sampleMat);
-
-// 			if (response == 1)
-// 				image.at<Vec3b>(j, i)  = green;
-// 			else if (response == -1)
-// 				image.at<Vec3b>(j, i)  = blue;
-// 		}
-
-//     // Show the training data
-// 		int thickness = -1;
-// 		int lineType = 8;
-// 		circle( image, Point(501,  10), 5, Scalar(  0,   0,   0), thickness, lineType);
-// 		circle( image, Point(255,  10), 5, Scalar(255, 255, 255), thickness, lineType);
-// 		circle( image, Point(501, 255), 5, Scalar(255, 255, 255), thickness, lineType);
-// 		circle( image, Point( 10, 501), 5, Scalar(255, 255, 255), thickness, lineType);
-
-//     // Show support vectors
-// 		thickness = 2;
-// 		lineType  = 8;
-// 		int c     = SVM.get_support_vector_count();
-
-// 		for (int i = 0; i < c; ++i)
-// 		{
-// 			const float* v = SVM.get_support_vector(i);
-// 			circle( image,  Point( (int) v[0], (int) v[1]),   6,  Scalar(128, 128, 128), thickness, lineType);
-// 		}
-
-//     imwrite("result.png", image);        // save the image
-
-//     imshow("SVM Simple Example", image); // show it to the user
-//     waitKey(0);
-
-// }
-
-// int main(){
-// 	ifstream fin;
-// 	string dir, filepath;
-// 	int num;
-// 	DIR *dp;
-// 	struct dirent *dirp;
-// 	struct stat filestat;
-
-// 	// cout << "dir to get files of: " << flush;
-// 	// getline( cin, dir );  // gets everything the user ENTERs
-// 	dir = "patentes";
-
-// 	dp = opendir( dir.c_str() );
-// 	if (dp == NULL)
-// 	{
-// 		cout << "Error(" << errno << ") opening " << dir << endl;
-// 		return errno;
-// 	}
-
-// 	while ((dirp = readdir( dp )))
-// 	{
-// 		filepath = dir + "/" + dirp->d_name;
-
-// 	// If the file is a directory (or is in some way invalid) we'll skip it 
-// 		if (stat( filepath.c_str(), &filestat )) continue;
-// 		if (S_ISDIR( filestat.st_mode ))         continue;
-// 		cout<<dirp->d_name<<endl;
-// 	}
-
-// 	closedir( dp );
-
-// 	return 0;
-// }
-
-
-// int main(int argc, char *argv[])
-// {
-// 	if(argc < 2 || argv == NULL){
-//         cout<<"Falta nombre de imagen Ej: ./main autos/image.jpg"<<endl;
-// 		return 0;
-// 	}
-// 	string file = argv[1];
-//     string filename = file;
-
-//     Mat imagen = imread(filename, -1);
-
-//     vector<Mat> channels (3);
-//     split(imagen, channels);
-	
-//     if(imagen.empty()){
-//         cout<<"ERROR: La imagen "<<filename<<" no pudo ser abierta"<<endl;
-//         exit(EXIT_FAILURE);
-//     }
-
-//     //imshow("Imagen Original", imagen);
-
-//     Mat binario;
-//     //threshold(channels[0], binario, (double)Funciones::umbralOtsu(imagen), 255, THRESH_BINARY);
-
-//     GaussianBlur(channels[0],channels[0],Size(7,7),1.1,1.1,BORDER_DEFAULT);
-//     adaptiveThreshold(channels[0], binario, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 15);
-//     // imshow("Imagen binaria", binario);
-//     Mat segmented;
-//     // pyrMeanShiftFiltering(imagen,segmented,8,40,5);
-//     // imshow("Imagen Segmentada", segmented);
-
-
-//     // vector<Mat> channelsSeg (3);
-//     // split(segmented, channelsSeg);
-
-//     // imshow("segmented channel", channelsSeg[0]);
-
-//     Mat element_rect = getStructuringElement(MORPH_CROSS, Size(3,3));
-//     Mat imagen_bin_dilated;
-
-//     erode(binario,imagen_bin_dilated,element_rect);
-//     imshow("erase",imagen_bin_dilated);
-//     // vector<vector<Point> > contours;
-//     // vector<Vec4i> hierarchy;
-
-//     // Mat canny;
-//     // Canny( binario, canny, 100, 100*2, 3 );
-//     // imshow("Canny", canny);
-//     // findContours( canny, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
-//     // /// Draw contours
-//     // Mat drawing = Mat::zeros( canny.size(), CV_8UC3 );
-//     // RNG rng(12345);
-//     // for( int i = 0; i< contours.size(); i++ )
-//     //  {
-//     //    Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-//     //    drawContours( drawing, contours, i, color, CV_FILLED, 8, hierarchy, 0, Point() );
-//     //  }
-
-//     // /// Show in a window
-//     // namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-//     // imshow( "Contours", drawing );
-
-//     waitKey(0);
-
-//     return 0;
-// }
