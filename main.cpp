@@ -238,7 +238,7 @@ void train(){
 	{
 		data << labelsMat.at<float>(i,0) <<".0";
 		for(int j=0; j < trainingDataMat.size().width; ++j){
-			data << " " << j <<":"<<trainingDataMat.at<float>(i,j);
+			data << " " << (j+1) <<":"<<trainingDataMat.at<float>(i,j);
 		}
 		data << "\n";
 	}
