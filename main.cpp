@@ -54,37 +54,37 @@ Mat calculateHist(const string& imageFilename, Mat image, int type){
 	Mat b_hist, g_hist, r_hist, bin_hist, img1_hist, img2_hist, img3_hist, img4_hist, img5_hist, img6_hist;
 
 	/// Compute the histograms:
-	calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate );
 	
 	Mat binario;
 	resize(imageSeg, imageSeg, Size(120,40), 0, 0, INTER_CUBIC);
 	GaussianBlur( imageSeg, imageSeg, Size(3,3), 0, 0, BORDER_DEFAULT );
-	cvtColor(imageSeg,binario,CV_BGR2GRAY);
-	threshold(binario, binario, (double)Funciones::umbralOtsu(imageSeg), 255, THRESH_BINARY);
+	// cvtColor(imageSeg,binario,CV_BGR2GRAY);
+	// threshold(binario, binario, (double)Funciones::umbralOtsu(imageSeg), 255, THRESH_BINARY);
 	// adaptiveThreshold(binario, binario, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 15);
 
-	calcHist( &binario, 1, 0, Mat(), bin_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &binario, 1, 0, Mat(), bin_hist, 1, &histSize, &histRange, uniform, accumulate );
 
-	int width = imageSeg.size().width;
-	int height = imageSeg.size().height;
+	// int width = imageSeg.size().width;
+	// int height = imageSeg.size().height;
 
-	Mat image1(binario, Range(0,height-1), Range(0,(width/2)-1));
-	Mat image2(binario, Range(0,height-1), Range(width/3, (width*2/3)-1));
-	Mat image3(binario, Range(0,height-1), Range(0,width-1));
+	// Mat image1(binario, Range(0,height-1), Range(0,(width/2)-1));
+	// Mat image2(binario, Range(0,height-1), Range(width/3, (width*2/3)-1));
+	// Mat image3(binario, Range(0,height-1), Range(0,width-1));
 	
-	Mat image4(binario, Range(0,(height/3)-1), Range(0, width-1));
-	Mat image5(binario, Range(height/3,(height*2/3)-1), Range(0, width-1));
-	Mat image6(binario, Range(height*2/3, height-1), Range(0, width-1));
+	// Mat image4(binario, Range(0,(height/3)-1), Range(0, width-1));
+	// Mat image5(binario, Range(height/3,(height*2/3)-1), Range(0, width-1));
+	// Mat image6(binario, Range(height*2/3, height-1), Range(0, width-1));
 
-	calcHist( &image1, 1, 0, Mat(), img1_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &image2, 1, 0, Mat(), img2_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &image3, 1, 0, Mat(), img3_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &image1, 1, 0, Mat(), img1_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &image2, 1, 0, Mat(), img2_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &image3, 1, 0, Mat(), img3_hist, 1, &histSize, &histRange, uniform, accumulate );
 	
-	calcHist( &image4, 1, 0, Mat(), img4_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &image5, 1, 0, Mat(), img5_hist, 1, &histSize, &histRange, uniform, accumulate );
-	calcHist( &image6, 1, 0, Mat(), img6_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &image4, 1, 0, Mat(), img4_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &image5, 1, 0, Mat(), img5_hist, 1, &histSize, &histRange, uniform, accumulate );
+	// calcHist( &image6, 1, 0, Mat(), img6_hist, 1, &histSize, &histRange, uniform, accumulate );
 
 	/// Normalize the result to [ 0, histImage.rows ]
 	// normalize(b_hist, b_hist, 0, 256, NORM_MINMAX, -1, Mat() );
@@ -165,6 +165,20 @@ void addHistToTrainingData(Mat hist, Mat trainingDataMat, int index){
 	}
 }
 
+void histToSVMFile(const char* filename, Mat hist, Mat labelsMat){
+	ofstream data;
+	data.open (filename);
+	for (int i = 0; i < hist.size().height; ++i)
+	{
+		data << labelsMat.at<float>(i,0) <<".0";
+		for(int j=0; j < hist.size().width; ++j){
+			data << " " << (j+1) <<":"<<hist.at<float>(i,j);
+		}
+		data << "\n";
+	}
+	data.close();
+}
+
 void train(){
 	// cout<<"Training Data"<<endl;
 
@@ -232,18 +246,10 @@ void train(){
 
 	closedir( dp );
 
-	ofstream data;
-	data.open ("patente_no_patente.lsvm");
-	for (int i = 0; i < trainingDataMat.size().height; ++i)
-	{
-		data << labelsMat.at<float>(i,0) <<".0";
-		for(int j=0; j < trainingDataMat.size().width; ++j){
-			data << " " << (j+1) <<":"<<trainingDataMat.at<float>(i,j);
-		}
-		data << "\n";
-	}
-	data.close();
-
+	histToSVMFile("patente_no_patente.lsvm",trainingDataMat,labelsMat);
+	int op = system("libsvm-small/svm-train -s 0 -t 2 -d 1 -g 10 -c 1 -b 1 patente_no_patente.lsvm patente_no_patente.model > /dev/null");
+	cout<<"Training result "<<op<<endl;
+	// return;
 	// Set up SVM's parameters
 	// CvSVMParams params;
 	// params.svm_type    = CvSVM::C_SVC;
@@ -264,8 +270,8 @@ void train(){
 	// SVM.save("model.xml");
 }
 bool is_patente(string filename_to_test, Mat image_to_test, int type){
-	CvSVM SVM;
-	SVM.load("model.xml");
+	// CvSVM SVM;
+	// SVM.load("model.xml");
 	if(type == 0)
 		return false;
 	else{
@@ -279,14 +285,50 @@ bool is_patente(string filename_to_test, Mat image_to_test, int type){
 			// cout<<"Testing mat"<<endl;
 			hist_test = calculateHist("",image_to_test,2);
 		}
+		Mat labelsMat = Mat::zeros(1,1,CV_32FC1);
 
-		float response = SVM.predict(hist_test);
+		histToSVMFile("test.lsvm",hist_test,labelsMat);
+		
+		system("libsvm-small/svm-predict -b 1 test.lsvm patente_no_patente.model result > /dev/null");
+		
+		float class1, class2;
 
-		if (response == 1){
+		ifstream infile("result");
+		string line;
+		int i = 1;
+		int j = 0;
+		while (getline(infile, line))
+		{
+			istringstream iss(line);
+			int a, b;
+			if (i == 2){
+				// cout<<iss.str()<<endl;
+				string temp;
+				while (iss >> temp){
+					if(j == 1){
+						istringstream ss(temp);
+						ss >> class1;
+					}
+					else if(j == 2){
+						istringstream ss(temp);
+						ss >> class2;
+					}
+					j++;
+				}
+				break;
+			}
+
+			i++;
+		}
+
+		// remove("test.lsvm");
+		// remove("result");
+		if (class1 > 0.8){
+			// cout<<"class1: "<<class1<<", class2: "<<class2<<endl;
 			// cout<<"The image IS patente"<<endl;
 			return true;
 		}
-		else if (response == -1){
+		else {
 			// cout<<"The image is NOT patente"<<endl;
 			return false;
 		}
@@ -406,8 +448,8 @@ int search_patent(string filename, string filename_seg, int factor){
 			// Mat pat;
 			// cvtColor(rect2,pat,CV_BGR2GRAY);
 			// threshold(pat, pat, (double)Funciones::umbralOtsu(pat), 255, THRESH_BINARY);
-			if(!is_patente("",rect2,2))
-				continue;
+			// if(!is_patente("",rect2,2))
+			// 	continue;
 			// extractComponentes(rect2, 0, index);
 			index++;
 			imwrite("partes/parte" + s + ".jpg",rect2);
@@ -681,7 +723,7 @@ int main(int argc, char *argv[]){
 			findCharacters(argv[2],name);
 		}
 		else if(param.compare("-s") == 0)
-			search_patent(argv[2],argv[3],3);
+			search_patent(argv[2],argv[3],5);
 		else if(param.compare("-fd") == 0)
 			feature_detection(argv[2],argv[3]);
 	}
