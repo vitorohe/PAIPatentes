@@ -246,32 +246,32 @@ void train(){
 
 	closedir( dp );
 
-	histToSVMFile("patente_no_patente.lsvm",trainingDataMat,labelsMat);
-	int op = system("libsvm-small/svm-train -s 0 -t 2 -d 1 -g 10 -c 1 -b 1 patente_no_patente.lsvm patente_no_patente.model > /dev/null");
-	cout<<"Training result "<<op<<endl;
+	// histToSVMFile("patente_no_patente.lsvm",trainingDataMat,labelsMat);
+	// int op = system("libsvm-small/svm-train -s 0 -t 1 -d 2 -g 2.0 -m 500 -b 1 -q patente_no_patente.lsvm patente_no_patente.model");// > /dev/null");
+	// cout<<"Training result "<<op<<endl;
 	// return;
-	// Set up SVM's parameters
-	// CvSVMParams params;
-	// params.svm_type    = CvSVM::C_SVC;
-	// params.kernel_type = CvSVM::POLY;
-	// params.degree = 2;
-	// params.p = 0;
-	// params.nu = 0;
-	// params.C = 1;
-	// params.coef0 = 0;
-	// params.gamma = 2;
-	// params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
+	/// Set up SVM's parameters
+	CvSVMParams params;
+	params.svm_type    = CvSVM::C_SVC;
+	params.kernel_type = CvSVM::POLY;
+	params.degree = 2;
+	params.p = 0;
+	params.nu = 0;
+	params.C = 1;
+	params.coef0 = 0;
+	params.gamma = 2;
+	params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
 	// cout<<labelsMat<<endl;
 	// cout<<trainingDataMat<<endl;
 
-	// Train the SVM
-	// CvSVM SVM;
-	// SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
-	// SVM.save("model.xml");
+	/// Train the SVM
+	CvSVM SVM;
+	SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
+	SVM.save("model.xml");
 }
 bool is_patente(string filename_to_test, Mat image_to_test, int type){
-	// CvSVM SVM;
-	// SVM.load("model.xml");
+	CvSVM SVM;
+	SVM.load("model.xml");
 	if(type == 0)
 		return false;
 	else{
@@ -287,43 +287,46 @@ bool is_patente(string filename_to_test, Mat image_to_test, int type){
 		}
 		Mat labelsMat = Mat::zeros(1,1,CV_32FC1);
 
-		histToSVMFile("test.lsvm",hist_test,labelsMat);
-		
-		system("libsvm-small/svm-predict -b 1 test.lsvm patente_no_patente.model result > /dev/null");
-		
-		float class1, class2;
+		float result = SVM.predict(hist_test);
 
-		ifstream infile("result");
-		string line;
-		int i = 1;
-		int j = 0;
-		while (getline(infile, line))
-		{
-			istringstream iss(line);
-			int a, b;
-			if (i == 2){
-				// cout<<iss.str()<<endl;
-				string temp;
-				while (iss >> temp){
-					if(j == 1){
-						istringstream ss(temp);
-						ss >> class1;
-					}
-					else if(j == 2){
-						istringstream ss(temp);
-						ss >> class2;
-					}
-					j++;
-				}
-				break;
-			}
+		// histToSVMFile("test.lsvm",hist_test,labelsMat);
+		
+		// system("libsvm-small/svm-predict -b 1 test.lsvm patente_no_patente.model result > /dev/null");
+		
+		// float class1, class2;
 
-			i++;
-		}
+		// ifstream infile("result");
+		// string line;
+		// int i = 1;
+		// int j = 0;
+		// while (getline(infile, line))
+		// {
+		// 	istringstream iss(line);
+		// 	int a, b;
+		// 	if (i == 2){
+		// 		// cout<<iss.str()<<endl;
+		// 		string temp;
+		// 		while (iss >> temp){
+		// 			if(j == 1){
+		// 				istringstream ss(temp);
+		// 				ss >> class1;
+		// 			}
+		// 			else if(j == 2){
+		// 				istringstream ss(temp);
+		// 				ss >> class2;
+		// 			}
+		// 			j++;
+		// 		}
+		// 		break;
+		// 	}
+
+		// 	i++;
+		// }
 
 		// remove("test.lsvm");
 		// remove("result");
-		if (class1 > 0.8){
+		// if (class1 > 0.8){
+		if (result == 1){
 			// cout<<"class1: "<<class1<<", class2: "<<class2<<endl;
 			// cout<<"The image IS patente"<<endl;
 			return true;
@@ -392,35 +395,38 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 }
 
 
-int search_patent(string filename, string filename_seg, int factor){
+vector<Mat> search_patent(Mat imageSeg, Mat image, float factor, int type){
 	cout<<"Looking for patente, factor: "<<factor<<endl;
-	Mat imageSeg = imread(filename_seg, 1);
-	if (imageSeg.empty()) {
-		printf("Error: image '%s' is empty, features calculation skipped!\n", filename_seg.c_str());
-		return 0;
-	}
-
-	Mat image = imread(filename, 1);
-	if (image.empty()) {
-		printf("Error: image '%s' is empty, features calculation skipped!\n", filename.c_str());
-		return 0;
-	}
 
 	int width = imageSeg.size().width;
 	int height = imageSeg.size().height;
 	
 	int width_rect = width/factor;
-	int height_rect = width_rect/3;
-	width_rect = width_rect*8/9;
-
+	int height_rect = width_rect/2.5;
+	// width_rect = width_rect*8/9;
+	cout<<"Sliding window: "<<height_rect<<" x "<<width_rect<<endl;
+	
 	string p;
 	Mat rect;
 	Mat rect2;
 	int index = 0;
+	int w_step = 0;
+	int height_init;
+	
+	if(type == 1){
+		height_init = height/3;
+		w_step = width_rect/2;
+	}
+	else if(type == 2){
+		height_init = 0;
+		w_step = width_rect/12;
+	}
 
-	for (int i = height/3; i + height_rect < height; i = i+height_rect/5)
+	vector<Mat> possible_patentes;
+
+	for (int i = height_init; i + height_rect < height; i = i+height_rect/6)
 	{
-		for (int j = 0; j + width_rect < width; j = j+height_rect/7)
+		for (int j = 0; j + width_rect < width; j = j+w_step)
 		{
 			rect = imageSeg(Rect(j,i,width_rect,height_rect));
 			cvtColor(rect,rect,CV_BGR2GRAY);
@@ -448,21 +454,67 @@ int search_patent(string filename, string filename_seg, int factor){
 			// Mat pat;
 			// cvtColor(rect2,pat,CV_BGR2GRAY);
 			// threshold(pat, pat, (double)Funciones::umbralOtsu(pat), 255, THRESH_BINARY);
-			// if(!is_patente("",rect2,2))
-			// 	continue;
+			if(!is_patente("",rect2,2))
+				continue;
 			// extractComponentes(rect2, 0, index);
 			index++;
-			imwrite("partes/parte" + s + ".jpg",rect2);
+			// imwrite("partes/parte" + s + ".jpg",rect2);
+			// add possible patente to vector
+			possible_patentes.push_back(rect2);
 			
 		}
 	}
 
-	if (index == 0 && factor < 9){
-		search_patent(filename, filename_seg, factor+1);
+	if (type == 1 && index == 0 && factor < 9){
+		return search_patent(imageSeg, image, factor+1,type);
+	}else{
+		return possible_patentes;
+	}
+}
+
+void search_final_patent(string filename_seg, string filename, float factor){
+
+	Mat imageSeg = imread(filename_seg, 1);
+	if (imageSeg.empty()) {
+		printf("Error: image '%s' is empty, features calculation skipped!\n", filename_seg.c_str());
+		return;
 	}
 
-	return index;
+	Mat image = imread(filename, 1);
+	if (image.empty()) {
+		printf("Error: image '%s' is empty, features calculation skipped!\n", filename.c_str());
+		return;
+	}
+
+	vector<Mat> possible_patentes = search_patent(imageSeg,image,factor,1);
+
+	vector<float> factors;
+	factors.push_back((float)9/8);
+	factors.push_back((float)8/7);
+	factors.push_back((float)7/6);
+	factors.push_back((float)6/5);
+	factors.push_back((float)5/4);
+	
+	// int k = 0;
+	
+	vector<Mat> more_possible_patentes;
+
+	for(int i = 0; i < possible_patentes.size(); i++){
+		imshow("possible pat", possible_patentes[i]);
+		waitKey(0);
+		for(int k = 0; k < factors.size(); k++){
+			more_possible_patentes = search_patent(possible_patentes[i],possible_patentes[i],factors[k],2);
+
+			for(int j = 0; j < more_possible_patentes.size(); j++){
+				imshow("more possible pat", more_possible_patentes[j]);
+				waitKey(0);
+			}
+		}
+
+	}
+
 }
+
 
 int cut_no_patente(string dir){
 	
@@ -723,7 +775,7 @@ int main(int argc, char *argv[]){
 			findCharacters(argv[2],name);
 		}
 		else if(param.compare("-s") == 0)
-			search_patent(argv[2],argv[3],5);
+			search_final_patent(argv[2],argv[3],3);
 		else if(param.compare("-fd") == 0)
 			feature_detection(argv[2],argv[3]);
 	}
