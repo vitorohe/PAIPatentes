@@ -20,11 +20,13 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "svm_model.h"
+#include "knearest.h"
 
 using namespace std;
 using namespace cv;
 
 SVM_Model svm_model;
+MyKNearest knearest;
 
 class comparator{
 public:
@@ -50,13 +52,21 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat canny;
-	Canny( imageSeg, canny, 100, 100*2, 3 );
+	Mat gray;
+	cvtColor(imageSeg,gray,CV_BGR2GRAY);
+	adaptiveThreshold(gray, gray, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 5, 7);
+	imshow("imageSeg",gray);
+	
+	// Canny( gray, canny, 100, 100*2, 3 );
 	// imshow("Canny", canny);
+	// waitKey(0);
+	// return 0;
 
 	Mat element_rect = getStructuringElement(MORPH_RECT, Size(2,2));
 	// Mat imagen_bin_dilated;
-	Mat imagen_bin_dilated = canny.clone();
+	Mat imagen_bin_dilated = gray.clone();
 
+	// erode(canny,imagen_bin_dilated,element_rect);
 	// dilate(canny,imagen_bin_dilated,element_rect);
 	// dilate(imagen_bin_dilated,imagen_bin_dilated,element_rect);
 
@@ -64,6 +74,7 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	sort(contours.begin(),contours.end(),comparator1());
 	/// Draw contours
 	Mat drawing = Mat::zeros( imagen_bin_dilated.size(), CV_8UC3 );
+	drawing.setTo(Scalar(255,255,255));
 	RNG rng(12345);
 	Rect rect;
 	// if(contours.size() < 6)
@@ -85,21 +96,24 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 		// 	continue;
 		// if(!is_patente("",img_rect,2))
 		// 	continue;
-		imshow("img_rect",img_rect);
-		waitKey(0);
+		// imshow("img_rect",img_rect);
+		// waitKey(0);
 		// ostringstream string_i;
 		// string_i <<"letras/c/comp_"<<name<<"_"<<index++<<".png";
 		// string s(string_i.str());
 		// imwrite(s,img_rect);
-		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+		Scalar color = Scalar( 0,0,0);
 		drawContours( drawing, contours, 0, color, CV_FILLED, 8, hierarchy, 0, Point() );
 	// }
 
 	/// Show in a window
 	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
 	imshow( "Contours", drawing );
-
     waitKey(0);
+	img_rect = drawing(Rect(pt1.x,pt1.y,rect.width,rect.height));
+	imshow("img_rect",img_rect);
+	waitKey(0);
+    knearest.train(img_rect);
     return index;
 }
 
@@ -220,7 +234,7 @@ void search_final_patent(string filename_seg, string filename, float factor){
 	
 	// int k = 0;
 	
-	Mat image2 = imread("try/parte0.jpg", 1);
+	Mat image2 = imread("parte1487.jpg", 1);
 	if (image2.empty()) {
 		return;
 	}
@@ -248,15 +262,18 @@ void search_final_patent(string filename_seg, string filename, float factor){
 		// 	}
 		// }
 
-
-		for (int j = 0; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += 5)
+		int k = 1;
+		for (int j = 3; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += possible_patentes[i].size().width/7+2)
 		{
 			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
 			imshow("more possible pat", rect1);
 			waitKey(0);
 			extractComponentes(rect1,0,3);
-			if(j+5+possible_patentes[i].size().width/7+2 >= possible_patentes[i].size().width)
-				j = possible_patentes[i].size().width -1 - possible_patentes[i].size().width/7+2 -5;
+			if(j+possible_patentes[i].size().width/7+2 >= possible_patentes[i].size().width)
+				j = possible_patentes[i].size().width - possible_patentes[i].size().width/7+2;
+			if(k%2 == 0)
+				j+=3;
+			k++;
 		}
 	}
 
@@ -484,6 +501,7 @@ void feature_detection(string filename, string filename2){
 int main(int argc, char *argv[]){
 
 	svm_model = SVM_Model();
+	knearest = MyKNearest();
 
 	if(argc == 2){
 		string param = argv[1];

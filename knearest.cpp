@@ -1,3 +1,4 @@
+#include "knearest.h"
 #include <stdio.h>
 #include "ml.h"
 #include "highgui.h"
@@ -25,7 +26,9 @@
 using namespace std;
 using namespace cv;
 
-Mat calculateHist(const string& imageFilename, Mat image, int type){
+MyKNearest::MyKNearest(){}
+
+Mat MyKNearest::calculateHist(const string& imageFilename, Mat image, int type){
 	// cout<<"hola"<<endl;
 	Mat imageSeg;
 	if(type == 1){
@@ -98,7 +101,7 @@ Mat calculateHist(const string& imageFilename, Mat image, int type){
 
 }
 
-void addHistToTrainingData(Mat hist, Mat trainingDataMat, int index){
+void MyKNearest::addHistToTrainingData(Mat hist, Mat trainingDataMat, int index){
 	// for (int i = 0; i < 256*6; ++i)
 	for (int i = 0; i < 1620; ++i)
 	{
@@ -106,11 +109,11 @@ void addHistToTrainingData(Mat hist, Mat trainingDataMat, int index){
 	}
 }
 
-void train(string imagepath){
+void MyKNearest::train(Mat input){
 	// cout<<"Training Data"<<endl;
 
 	Mat imageDataMat(1, 1620, CV_32FC1);
-	addHistToTrainingData(calculateHist(imagepath,Mat(),1),imageDataMat,0);
+	addHistToTrainingData(calculateHist("",input,2),imageDataMat,0);
 	/*--------------------------------------------------------------------------*/
 
 	string dir, filepath;
@@ -130,7 +133,7 @@ void train(string imagepath){
 	// Mat trainingDataMat(220, 256*6, CV_32FC1);
 	Mat trainingDataMat(612, 1620, CV_32FC1);
 
-	cout<<labelsMat<<endl;
+	// cout<<labelsMat<<endl;
 
 	int index = 0;
 	// cout<<"Training patentes"<<endl;
@@ -172,15 +175,17 @@ void train(string imagepath){
 
 	// estimate the response and get the neighbors' labels
     float response = knn.find_nearest(imageDataMat,K,0,0,&nearests,0);
+    if(response >= 35)
+    	return;
 	cout<<"Response: "<<response<<" = "<<letras[(int)response]<<endl;
     // compute the number of neighbors representing the majority
     for( int k = 0; k < K; k++ )
     {
-        cout<<"Vecino: "<<nearests.at<float>(0,k)<<endl;
+        cout<<"Vecino: "<<nearests.at<float>(0,k)<<" "<<letras[(int)nearests.at<float>(0,k)]<<endl;
     }
 }
 
-int main( int argc, char** argv ) {
+/*int main( int argc, char** argv ) {
 	string imagepath = argv[1];
 	
 	train(imagepath);
@@ -273,4 +278,4 @@ int main2( int argc, char** argv )
     cvReleaseMat( &trainClasses );
     cvReleaseMat( &trainData );
     return 0;
-}
+}*/
