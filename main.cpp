@@ -26,31 +26,52 @@ using namespace cv;
 
 SVM_Model svm_model;
 
+class comparator{
+public:
+	bool operator()(vector<Point> c1,vector<Point>c2){
+
+		return boundingRect( c1).x<boundingRect( c2).x;
+
+	}
+
+};
+
+class comparator1{
+public:
+	bool operator()(vector<Point> c1,vector<Point>c2){
+
+		return boundingRect( c1).size().height > boundingRect( c2).size().height;
+
+	}
+
+};
+
 int extractComponentes(Mat imageSeg, int index, int name) {
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	Mat canny;
 	Canny( imageSeg, canny, 100, 100*2, 3 );
-	imshow("Canny", canny);
+	// imshow("Canny", canny);
 
 	Mat element_rect = getStructuringElement(MORPH_RECT, Size(2,2));
-	Mat imagen_bin_dilated;
+	// Mat imagen_bin_dilated;
+	Mat imagen_bin_dilated = canny.clone();
 
 	// dilate(canny,imagen_bin_dilated,element_rect);
 	// dilate(imagen_bin_dilated,imagen_bin_dilated,element_rect);
 
-	findContours( canny, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-	// sort(contours.begin(),contours.end(),comparator());
+	findContours( imagen_bin_dilated, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+	sort(contours.begin(),contours.end(),comparator1());
 	/// Draw contours
 	Mat drawing = Mat::zeros( imagen_bin_dilated.size(), CV_8UC3 );
 	RNG rng(12345);
 	Rect rect;
-	if(contours.size() < 6)
-		return 0;
-	for( int i = 0; i< contours.size(); i++ )
-	{
+	// if(contours.size() < 6)
+	// 	return 0;
+	// for( int i = 0; i< contours.size(); i++ )
+	// {
 
-		rect = boundingRect(contours[i]);
+		rect = boundingRect(contours[0]);
 		
 		Point pt1,pt2;
 		pt1.x = rect.x;
@@ -58,26 +79,27 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 		pt2.x = rect.x + rect.width;
 		pt2.y = rect.y + rect.height;
 
-		Mat img_rect = canny(Rect(pt1.x,pt1.y,rect.width,rect.height));
+		Mat img_rect = imageSeg(Rect(pt1.x,pt1.y,rect.width,rect.height));
 		
 		// if(img_rect.size().height > img_rect.size().width/2)
 		// 	continue;
 		// if(!is_patente("",img_rect,2))
 		// 	continue;
 		imshow("img_rect",img_rect);
+		waitKey(0);
 		// ostringstream string_i;
 		// string_i <<"letras/c/comp_"<<name<<"_"<<index++<<".png";
 		// string s(string_i.str());
 		// imwrite(s,img_rect);
 		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		drawContours( imageSeg, contours, i, color, CV_FILLED, 8, hierarchy, 0, Point() );
-	}
+		drawContours( drawing, contours, 0, color, CV_FILLED, 8, hierarchy, 0, Point() );
+	// }
 
 	/// Show in a window
-	// namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-	// imshow( "Contours", drawing );
+	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
+	imshow( "Contours", drawing );
 
-    // waitKey(0);
+    waitKey(0);
     return index;
 }
 
@@ -300,17 +322,6 @@ int cut_no_patente(string dir){
 		}
 	}
 }
-
-class comparator{
-public:
-	bool operator()(vector<Point> c1,vector<Point>c2){
-
-		return boundingRect( c1).x<boundingRect( c2).x;
-
-	}
-
-};
-
 
 int extractCharacters(Mat imageSeg, int index, string letras[], int name) {
 	vector<vector<Point> > contours;
