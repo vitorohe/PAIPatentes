@@ -19,325 +19,12 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include "svm_model.h"
 
 using namespace std;
 using namespace cv;
 
-
-
-Mat calculateHist(const string& imageFilename, Mat image, int type){
-	// cout<<"hola"<<endl;
-	Mat imageSeg;
-	if(type == 1){
-		imageSeg = imread(imageFilename, 1);
-		if (imageSeg.empty()) {
-			printf("Error: image '%s' is empty, features calculation skipped!\n", imageFilename.c_str());
-			return Mat();
-		}
-	}
-	else
-		imageSeg = image.clone();
-	
-	// cout<<"hola2"<<endl;
-	vector<Mat> bgr_planes;
-	split( imageSeg, bgr_planes );
-
-	/// Establish the number of bins
-	int histSize = 256;
-	// cout<<"hola3"<<endl;
-	/// Set the ranges ( for B,G,R) )
-	float range[] = { 0, 256 } ;
-	const float* histRange = { range };
-
-	bool uniform = true; bool accumulate = false;
-
-	Mat b_hist, g_hist, r_hist, bin_hist, img1_hist, img2_hist, img3_hist, img4_hist, img5_hist, img6_hist;
-
-	/// Compute the histograms:
-	// calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate );
-	
-	Mat binario;
-	resize(imageSeg, imageSeg, Size(120,40), 0, 0, INTER_CUBIC);
-	GaussianBlur( imageSeg, imageSeg, Size(3,3), 0, 0, BORDER_DEFAULT );
-	// cvtColor(imageSeg,binario,CV_BGR2GRAY);
-	// threshold(binario, binario, (double)Funciones::umbralOtsu(imageSeg), 255, THRESH_BINARY);
-	// adaptiveThreshold(binario, binario, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 15);
-
-	// calcHist( &binario, 1, 0, Mat(), bin_hist, 1, &histSize, &histRange, uniform, accumulate );
-
-	// int width = imageSeg.size().width;
-	// int height = imageSeg.size().height;
-
-	// Mat image1(binario, Range(0,height-1), Range(0,(width/2)-1));
-	// Mat image2(binario, Range(0,height-1), Range(width/3, (width*2/3)-1));
-	// Mat image3(binario, Range(0,height-1), Range(0,width-1));
-	
-	// Mat image4(binario, Range(0,(height/3)-1), Range(0, width-1));
-	// Mat image5(binario, Range(height/3,(height*2/3)-1), Range(0, width-1));
-	// Mat image6(binario, Range(height*2/3, height-1), Range(0, width-1));
-
-	// calcHist( &image1, 1, 0, Mat(), img1_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &image2, 1, 0, Mat(), img2_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &image3, 1, 0, Mat(), img3_hist, 1, &histSize, &histRange, uniform, accumulate );
-	
-	// calcHist( &image4, 1, 0, Mat(), img4_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &image5, 1, 0, Mat(), img5_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &image6, 1, 0, Mat(), img6_hist, 1, &histSize, &histRange, uniform, accumulate );
-
-	/// Normalize the result to [ 0, histImage.rows ]
-	// normalize(b_hist, b_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	// normalize(g_hist, g_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	// normalize(r_hist, r_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	// normalize(img1_hist, img1_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	// normalize(img2_hist, img2_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	// normalize(img3_hist, img3_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	// normalize(img4_hist, img4_hist, 0, 256, NORM_MINMAX, -1, Mat() );
-	
-	// HOGDescriptor hog(Size win_size=Size(64, 128), Size block_size=Size(16, 16),
-	//                   Size block_stride=Size(8, 8), Size cell_size=Size(8, 8),
-	//                   int nbins=9, double win_sigma=DEFAULT_WIN_SIGMA,
-	//                   double threshold_L2hys=0.2, bool gamma_correction=true,
-	//                   int nlevels=DEFAULT_NLEVELS);
-	HOGDescriptor hog(Size(120, 40), Size(20, 20), Size(5, 5), Size(10, 10), 9);
-	vector<float> ders;
-	vector<Point>locs;
-	
-	hog.compute(imageSeg,ders,Size(10,10),Size(0,0),locs);
-	Mat hog_mat(ders.size(), 1, CV_32F);
-	for (int i = 0; i < ders.size(); ++i)
-	{
-		hog_mat.at<float>(i,0) = ders.at(i);
-	}
-	// cout<<ders.size()<<endl;
-	// cout<<hog_mat<<endl;
-	// exit(0);
-
-	// Mat hist(1,256*6,CV_32F);
-	Mat hist(1,3780,CV_32F);
-	
-	// for (int i = 0; i < 256*6; ++i)
-	for (int i = 0; i < 3780; ++i)
-	{
-		hist.at<float>(0,i) = hog_mat.at<float>(i,0);
-		// if(i < 256){
-		// 	// hist.at<float>(0,i) = b_hist.at<float>(i,0);
-		// 	hist.at<float>(0,i) = img1_hist.at<float>(i,0);
-		// }
-		// else if(i < 256*2){
-		// 	// hist.at<float>(0,i) = g_hist.at<float>(i%256,0);
-		// 	hist.at<float>(0,i) = img2_hist.at<float>(i%256,0);
-		// }
-		// else if(i < 256*3){
-		// 	// hist.at<float>(0,i) = r_hist.at<float>(i%256,0);
-		// 	hist.at<float>(0,i) = img3_hist.at<float>(i%256,0);
-		// }
-		// else if(i < 256*4){
-		// 	// hist.at<float>(0,i) = bin_hist.at<float>(i%256,0);
-		// 	hist.at<float>(0,i) = img4_hist.at<float>(i%256,0);
-		// }		
-		// else if(i < 256*5){
-		// 	// hist.at<float>(0,i) = img1_hist.at<float>(i%256,0);
-		// 	hist.at<float>(0,i) = img5_hist.at<float>(i%256,0);
-		// }		
-		// else if(i < 256*6){
-		// 	// hist.at<float>(0,i) = img2_hist.at<float>(i%256,0);
-		// 	hist.at<float>(0,i) = img6_hist.at<float>(i%256,0);
-		// }		
-		// else if(i < 256*7){
-			// hist.at<float>(0,i) = img3_hist.at<float>(i%256,0);
-			// hist.at<float>(0,i) = bin_hist.at<float>(i%256,0);
-		// }
-		// else{
-		// 	hist.at<float>(0,i) = img4_hist.at<float>(i%256,0);
-		// }
-	}
-	return hist;
-
-}
-
-void addHistToTrainingData(Mat hist, Mat trainingDataMat, int index){
-	// for (int i = 0; i < 256*6; ++i)
-	for (int i = 0; i < 3780; ++i)
-	{
-		trainingDataMat.at<float>(index,i) = hist.at<float>(0,i);
-	}
-}
-
-void histToSVMFile(const char* filename, Mat hist, Mat labelsMat){
-	ofstream data;
-	data.open (filename);
-	for (int i = 0; i < hist.size().height; ++i)
-	{
-		data << labelsMat.at<float>(i,0) <<".0";
-		for(int j=0; j < hist.size().width; ++j){
-			data << " " << (j+1) <<":"<<hist.at<float>(i,j);
-		}
-		data << "\n";
-	}
-	data.close();
-}
-
-void train(){
-	// cout<<"Training Data"<<endl;
-
-	string dir, filepath;
-	int num;
-	DIR *dp;
-	struct dirent *dirp;
-	struct stat filestat;
-
-	float labels[110+2330];
-	for (int i = 0; i < 110+2330; ++i)
-	{
-		if (i < 110){
-			labels[i] = 1.0;
-		}
-		else{
-			labels[i] = 0.0;
-		}
-	}
-	
-	Mat labelsMat(110+2330, 1, CV_32FC1, labels);
-	// Mat trainingDataMat(220, 256*6, CV_32FC1);
-	Mat trainingDataMat(110+2330, 3780, CV_32FC1);
-
-
-	int index = 0;
-	// cout<<"Training patentes"<<endl;
-	dir = "patentes";
-
-	dp = opendir( dir.c_str() );
-	if (dp == NULL)
-	{
-		cout << "Error(" << errno << ") opening " << dir << endl;
-	}
-
-	while ((dirp = readdir( dp )))
-	{
-		filepath = dir + "/" + dirp->d_name;
-
-	// If the file is a directory (or is in some way invalid) we'll skip it 
-		if (stat( filepath.c_str(), &filestat )) continue;
-		if (S_ISDIR( filestat.st_mode ))         continue;
-		addHistToTrainingData(calculateHist(filepath,Mat(),1),trainingDataMat,index++);
-	}
-
-	closedir( dp );
-	// cout<<"Training no patentes"<<endl;
-	dir = "no_patente";
-
-	dp = opendir( dir.c_str() );
-	if (dp == NULL)
-	{
-		cout << "Error(" << errno << ") opening " << dir << endl;
-	}
-
-	while ((dirp = readdir( dp )))
-	{
-		filepath = dir + "/" + dirp->d_name;
-
-	// If the file is a directory (or is in some way invalid) we'll skip it 
-		if (stat( filepath.c_str(), &filestat )) continue;
-		if (S_ISDIR( filestat.st_mode ))         continue;
-		addHistToTrainingData(calculateHist(filepath,Mat(),1),trainingDataMat,index++);
-	}
-
-	closedir( dp );
-
-	// histToSVMFile("patente_no_patente.lsvm",trainingDataMat,labelsMat);
-	// int op = system("libsvm-small/svm-train -s 0 -t 1 -d 2 -g 2.0 -m 500 -b 1 -q patente_no_patente.lsvm patente_no_patente.model");// > /dev/null");
-	// cout<<"Training result "<<op<<endl;
-	// return;
-	/// Set up SVM's parameters
-	CvSVMParams params;
-	params.svm_type    = CvSVM::C_SVC;
-	params.kernel_type = CvSVM::POLY;
-	params.degree = 2;
-	params.p = 0;
-	params.nu = 0;
-	params.C = 1;
-	params.coef0 = 0;
-	params.gamma = 2;
-	params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 1000, 1e-6);
-	// cout<<labelsMat<<endl;
-	// cout<<trainingDataMat<<endl;
-
-	/// Train the SVM
-	CvSVM SVM;
-	SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
-	SVM.save("model.xml");
-}
-bool is_patente(string filename_to_test, Mat image_to_test, int type){
-	CvSVM SVM;
-	SVM.load("model.xml");
-	if(type == 0)
-		return false;
-	else{
-		Mat hist_test;
-
-		if(type == 1){
-			// cout<<"Testing file"<<endl;
-			hist_test = calculateHist(filename_to_test,Mat(),1);
-		}
-		else if(type == 2){
-			// cout<<"Testing mat"<<endl;
-			hist_test = calculateHist("",image_to_test,2);
-		}
-		Mat labelsMat = Mat::zeros(1,1,CV_32FC1);
-
-		float result = SVM.predict(hist_test);
-
-		// histToSVMFile("test.lsvm",hist_test,labelsMat);
-		
-		// system("libsvm-small/svm-predict -b 1 test.lsvm patente_no_patente.model result > /dev/null");
-		
-		// float class1, class2;
-
-		// ifstream infile("result");
-		// string line;
-		// int i = 1;
-		// int j = 0;
-		// while (getline(infile, line))
-		// {
-		// 	istringstream iss(line);
-		// 	int a, b;
-		// 	if (i == 2){
-		// 		// cout<<iss.str()<<endl;
-		// 		string temp;
-		// 		while (iss >> temp){
-		// 			if(j == 1){
-		// 				istringstream ss(temp);
-		// 				ss >> class1;
-		// 			}
-		// 			else if(j == 2){
-		// 				istringstream ss(temp);
-		// 				ss >> class2;
-		// 			}
-		// 			j++;
-		// 		}
-		// 		break;
-		// 	}
-
-		// 	i++;
-		// }
-
-		// remove("test.lsvm");
-		// remove("result");
-		// if (class1 > 0.8){
-		if (result == 1){
-			// cout<<"class1: "<<class1<<", class2: "<<class2<<endl;
-			// cout<<"The image IS patente"<<endl;
-			return true;
-		}
-		else {
-			// cout<<"The image is NOT patente"<<endl;
-			return false;
-		}
-	}
-
-}
+SVM_Model svm_model;
 
 int extractComponentes(Mat imageSeg, int index, int name) {
 	vector<vector<Point> > contours;
@@ -349,10 +36,10 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	Mat element_rect = getStructuringElement(MORPH_RECT, Size(2,2));
 	Mat imagen_bin_dilated;
 
-	dilate(canny,imagen_bin_dilated,element_rect);
-	dilate(imagen_bin_dilated,imagen_bin_dilated,element_rect);
+	// dilate(canny,imagen_bin_dilated,element_rect);
+	// dilate(imagen_bin_dilated,imagen_bin_dilated,element_rect);
 
-	findContours( imagen_bin_dilated, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+	findContours( canny, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 	// sort(contours.begin(),contours.end(),comparator());
 	/// Draw contours
 	Mat drawing = Mat::zeros( imagen_bin_dilated.size(), CV_8UC3 );
@@ -371,19 +58,19 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 		pt2.x = rect.x + rect.width;
 		pt2.y = rect.y + rect.height;
 
-		Mat img_rect = imageSeg(Rect(pt1.x,pt1.y,rect.width,rect.height));
+		Mat img_rect = canny(Rect(pt1.x,pt1.y,rect.width,rect.height));
 		
 		// if(img_rect.size().height > img_rect.size().width/2)
 		// 	continue;
 		// if(!is_patente("",img_rect,2))
 		// 	continue;
-
-		ostringstream string_i;
-		string_i <<"letras/c/comp_"<<name<<"_"<<index++<<".png";
-		string s(string_i.str());
-		imwrite(s,img_rect);
-		// Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-		// drawContours( drawing, contours, i, color, CV_FILLED, 8, hierarchy, 0, Point() );
+		imshow("img_rect",img_rect);
+		// ostringstream string_i;
+		// string_i <<"letras/c/comp_"<<name<<"_"<<index++<<".png";
+		// string s(string_i.str());
+		// imwrite(s,img_rect);
+		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+		drawContours( imageSeg, contours, i, color, CV_FILLED, 8, hierarchy, 0, Point() );
 	}
 
 	/// Show in a window
@@ -395,14 +82,14 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 }
 
 
-vector<Mat> search_patent(Mat imageSeg, Mat image, float factor, int type){
+vector<Mat> search_patent(Mat imageSeg, Mat image, float factor){
 	cout<<"Looking for patente, factor: "<<factor<<endl;
 
 	int width = imageSeg.size().width;
 	int height = imageSeg.size().height;
 	
 	int width_rect = width/factor;
-	int height_rect = width_rect/2.5;
+	int height_rect = width_rect/2.6;
 	// width_rect = width_rect*8/9;
 	cout<<"Sliding window: "<<height_rect<<" x "<<width_rect<<endl;
 	
@@ -413,60 +100,74 @@ vector<Mat> search_patent(Mat imageSeg, Mat image, float factor, int type){
 	int w_step = 0;
 	int height_init;
 	
-	if(type == 1){
+	// if(type == 1){
 		height_init = height/3;
-		w_step = width_rect/2;
-	}
-	else if(type == 2){
-		height_init = 0;
-		w_step = width_rect/12;
-	}
+		w_step = width_rect/3;
+	// }
+	// else if(type == 2){
+	// 	height_init = 0;
+	// 	w_step = width_rect/12;
+	// }
+	
+	vector<int> height_steps;
+
+	// for (int i = 6; i < 11; i = i+2)
+	// {
+	// 	height_steps.push_back((height_rect/20)*i);
+	// }
+	height_steps.push_back(height_rect/3);
 
 	vector<Mat> possible_patentes;
 
-	for (int i = height_init; i + height_rect < height; i = i+height_rect/6)
+	for (int j = 0; j + width_rect < 4*width/5; j = j+w_step)
 	{
-		for (int j = 0; j + width_rect < width; j = j+w_step)
+		for(int n = height_steps.size()-1; n >= 0 ;n--)
 		{
-			rect = imageSeg(Rect(j,i,width_rect,height_rect));
-			cvtColor(rect,rect,CV_BGR2GRAY);
-			threshold(rect, rect, (double)Funciones::umbralOtsu(rect), 255, THRESH_BINARY);
-			ostringstream string_i;
-			string_i << index;
-			string s(string_i.str());
-			bool black = false;
-			int b = 0;
-			for (int k = 0; k < rect.size().height; ++k)
+			for (int i = height-1-height_rect; i > height_init; i = i-height_steps[n])
 			{
-				for (int l = 0; l < rect.size().width; ++l)
+				rect = imageSeg(Rect(j,i,width_rect,height_rect));
+				cvtColor(rect,rect,CV_BGR2GRAY);
+				threshold(rect, rect, (double)Funciones::umbralOtsu(rect), 255, THRESH_BINARY);
+				ostringstream string_i;
+				string_i << index;
+				string s(string_i.str());
+				bool black = false;
+				int b = 0;
+				for (int k = 0; k < rect.size().height; ++k)
 				{
-					if((int)rect.at<uchar>(k,l) == 0){
-						b++;
+					for (int l = 0; l < rect.size().width; ++l)
+					{
+						if((int)rect.at<uchar>(k,l) == 0){
+							b++;
+						}
 					}
 				}
-			}
 
-			if (b > 0.7*rect.size().height*rect.size().width){
-				continue;
-			}
+				if (b > 0.7*rect.size().height*rect.size().width){
+					continue;
+				}
 
-			rect2 = image(Rect(j,i,width_rect,height_rect));
-			// Mat pat;
-			// cvtColor(rect2,pat,CV_BGR2GRAY);
-			// threshold(pat, pat, (double)Funciones::umbralOtsu(pat), 255, THRESH_BINARY);
-			if(!is_patente("",rect2,2))
-				continue;
-			// extractComponentes(rect2, 0, index);
-			index++;
-			// imwrite("partes/parte" + s + ".jpg",rect2);
-			// add possible patente to vector
-			possible_patentes.push_back(rect2);
-			
+				rect2 = image(Rect(j,i,width_rect,height_rect));
+				// Mat pat;
+				// cvtColor(rect2,pat,CV_BGR2GRAY);
+				// threshold(pat, pat, (double)Funciones::umbralOtsu(pat), 255, THRESH_BINARY);
+				// imshow("rect2",rect2);
+				// waitKey(0);
+				if(!svm_model.is_patente("",rect2,2))
+					continue;
+				// extractComponentes(rect2, 0, index);
+				index++;
+				imwrite("partes/parte" + s + ".jpg",rect2);
+				// add possible patente to vector
+				possible_patentes.push_back(rect2);
+			}
+			if(possible_patentes.size() > 0)
+				break;
 		}
 	}
 
-	if (type == 1 && index == 0 && factor < 9){
-		return search_patent(imageSeg, image, factor+1,type);
+	if (index == 0 && factor < 9){
+		return search_patent(imageSeg, image, factor+0.5);
 	}else{
 		return possible_patentes;
 	}
@@ -486,31 +187,55 @@ void search_final_patent(string filename_seg, string filename, float factor){
 		return;
 	}
 
-	vector<Mat> possible_patentes = search_patent(imageSeg,image,factor,1);
+	vector<Mat> possible_patentes;// = search_patent(imageSeg,image,factor);
 
-	vector<float> factors;
-	factors.push_back((float)9/8);
-	factors.push_back((float)8/7);
-	factors.push_back((float)7/6);
-	factors.push_back((float)6/5);
-	factors.push_back((float)5/4);
+	// vector<float> factors;
+	// factors.push_back((float)9/8);
+	// factors.push_back((float)8/7);
+	// factors.push_back((float)7/6);
+	// factors.push_back((float)6/5);
+	// factors.push_back((float)5/4);
 	
 	// int k = 0;
 	
-	vector<Mat> more_possible_patentes;
+	Mat image2 = imread("try/parte0.jpg", 1);
+	if (image2.empty()) {
+		return;
+	}
 
+	vector<Mat> more_possible_patentes;
+	possible_patentes.push_back(image2);
+	Mat rect1;
 	for(int i = 0; i < possible_patentes.size(); i++){
 		imshow("possible pat", possible_patentes[i]);
 		waitKey(0);
-		for(int k = 0; k < factors.size(); k++){
-			more_possible_patentes = search_patent(possible_patentes[i],possible_patentes[i],factors[k],2);
+		// for(int k = 0; k < factors.size(); k++){
+		// 	more_possible_patentes = search_patent(possible_patentes[i],possible_patentes[i],factors[k],2);
 
-			for(int j = 0; j < more_possible_patentes.size(); j++){
-				imshow("more possible pat", more_possible_patentes[j]);
-				waitKey(0);
-			}
+		// 	for(int j = 0; j < more_possible_patentes.size(); j++){
+		// 		imshow("more possible pat", more_possible_patentes[j]);
+		// 		waitKey(0);
+		// 	}
+		// }
+		// for (int j = 0; j < 10; ++j)
+		// {
+		// 	rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width-1-j,possible_patentes[i].size().height));
+		// 	if(svm_model.is_patente("",rect1,2)){
+		// 		imshow("more possible pat", rect1);
+		// 		waitKey(0);
+		// 	}
+		// }
+
+
+		for (int j = 0; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += 5)
+		{
+			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
+			imshow("more possible pat", rect1);
+			waitKey(0);
+			extractComponentes(rect1,0,3);
+			if(j+5+possible_patentes[i].size().width/7+2 >= possible_patentes[i].size().width)
+				j = possible_patentes[i].size().width -1 - possible_patentes[i].size().width/7+2 -5;
 		}
-
 	}
 
 }
@@ -747,15 +472,17 @@ void feature_detection(string filename, string filename2){
 
 int main(int argc, char *argv[]){
 
+	svm_model = SVM_Model();
+
 	if(argc == 2){
 		string param = argv[1];
 		if(param.compare("-T") == 0)
-			train();
+			svm_model.train();
 	}
 	else if(argc == 3){
 		string param = argv[1];
 		if(param.compare("-t") == 0)
-			if(is_patente(argv[2],Mat(),1)){
+			if(svm_model.is_patente(argv[2],Mat(),1)){
 				cout<<"IS patente"<<endl;
 			}
 			else{
