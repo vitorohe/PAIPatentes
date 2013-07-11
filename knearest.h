@@ -10,5 +10,5 @@ public:
 	MyKNearest();
 	Mat calculateHist(const string& imageFilename, Mat image, int type);
 	void addHistToTrainingData(Mat hist, Mat trainingDataMat, int index);
-	void train(Mat input);
+	int train(Mat input);
 };

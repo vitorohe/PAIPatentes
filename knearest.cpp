@@ -109,7 +109,7 @@ void MyKNearest::addHistToTrainingData(Mat hist, Mat trainingDataMat, int index)
 	}
 }
 
-void MyKNearest::train(Mat input){
+int MyKNearest::train(Mat input){
 	// cout<<"Training Data"<<endl;
 
 	Mat imageDataMat(1, 1620, CV_32FC1);
@@ -176,13 +176,15 @@ void MyKNearest::train(Mat input){
 	// estimate the response and get the neighbors' labels
     float response = knn.find_nearest(imageDataMat,K,0,0,&nearests,0);
     if(response >= 35)
-    	return;
+    	return -1;
 	cout<<"Response: "<<response<<" = "<<letras[(int)response]<<endl;
     // compute the number of neighbors representing the majority
     for( int k = 0; k < K; k++ )
     {
         cout<<"Vecino: "<<nearests.at<float>(0,k)<<" "<<letras[(int)nearests.at<float>(0,k)]<<endl;
     }
+
+    return (int)response;
 }
 
 /*int main( int argc, char** argv ) {

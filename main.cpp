@@ -54,7 +54,7 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	Mat canny;
 	Mat gray;
 	cvtColor(imageSeg,gray,CV_BGR2GRAY);
-	adaptiveThreshold(gray, gray, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 5, 7);
+	adaptiveThreshold(gray, gray, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 5, 2);
 	imshow("imageSeg",gray);
 	
 	// Canny( gray, canny, 100, 100*2, 3 );
@@ -62,7 +62,7 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	// waitKey(0);
 	// return 0;
 
-	Mat element_rect = getStructuringElement(MORPH_RECT, Size(2,2));
+	Mat element_rect = getStructuringElement(MORPH_RECT, Size(2,1));
 	// Mat imagen_bin_dilated;
 	Mat imagen_bin_dilated = gray.clone();
 
@@ -83,6 +83,10 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	// {
 
 		rect = boundingRect(contours[0]);
+		cout<<"limit: "<<imageSeg.size().height/2 + imageSeg.size().height/5<<endl;
+		cout<<"rect h "<<rect.height<<endl;
+		if(rect.height > imageSeg.size().height/2 + imageSeg.size().height/5)
+			return -1;
 		
 		Point pt1,pt2;
 		pt1.x = rect.x;
@@ -110,11 +114,12 @@ int extractComponentes(Mat imageSeg, int index, int name) {
 	namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
 	imshow( "Contours", drawing );
     waitKey(0);
+    // dilate(drawing,drawing,element_rect);
+    // dilate(drawing,drawing,element_rect);
 	img_rect = drawing(Rect(pt1.x,pt1.y,rect.width,rect.height));
 	imshow("img_rect",img_rect);
 	waitKey(0);
-    knearest.train(img_rect);
-    return index;
+    return knearest.train(img_rect);
 }
 
 
@@ -261,9 +266,42 @@ void search_final_patent(string filename_seg, string filename, float factor){
 		// 		waitKey(0);
 		// 	}
 		// }
+		int init = 0;
+		int result;
 
+		for (int j = 0; j < 30; j += 3)
+		{
+			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
+			imshow("more possible pat", rect1);
+			waitKey(0);
+			result = extractComponentes(rect1,0,3);
+			if(result != -1){
+				init = j;
+				break;
+			}
+		}
+		cout<<"init: "<<init<<endl;
+		possible_patentes[i] = possible_patentes[i](Rect(init,0,possible_patentes[i].size().width-init-1,possible_patentes[i].size().height-1));
+		int fin;
+
+		for (int j = possible_patentes[i].size().width-1; j > possible_patentes[i].size().width/2; j -= 3)
+		{
+			rect1 = possible_patentes[i](Rect(j-1-possible_patentes[i].size().width/7,0,(possible_patentes[i].size().width/7)+2,possible_patentes[i].size().height));
+			imshow("more possible pat", rect1);
+			waitKey(0);
+			result = extractComponentes(rect1,0,3);
+			if(result != -1){
+				fin = j;
+				break;
+			}
+		}
+		possible_patentes[i] = possible_patentes[i](Rect(0,0,fin+1,possible_patentes[i].size().height-1));
+
+		imshow("possible pat", possible_patentes[i]);
+		waitKey(0);
+		// return;
 		int k = 1;
-		for (int j = 3; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += possible_patentes[i].size().width/7+2)
+		for (int j = init; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += possible_patentes[i].size().width/7+2)
 		{
 			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
 			imshow("more possible pat", rect1);
