@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <cstdlib>
-#include "funciones.h"
+//#include "funciones.h"
 
 #include <fstream>
 #include <iostream>

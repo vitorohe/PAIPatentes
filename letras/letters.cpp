@@ -85,7 +85,7 @@
                     // imshow("image",image);
                     //char ch  = waitKey(0);
                     stringstream searchMask;
-                    searchMask<<"c/"<<letras[i]<<".jpg";
+                    searchMask<<"caracteres/"<<letras[i]<<".jpg";
                     imwrite(searchMask.str(),resizedPic);
      
              }

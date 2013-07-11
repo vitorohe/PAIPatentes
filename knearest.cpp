@@ -109,8 +109,8 @@ void MyKNearest::addHistToTrainingData(Mat hist, Mat trainingDataMat, int index)
 	}
 }
 
-void MyKNearest::train(Mat input){
-	// cout<<"Training Data"<<endl;
+int MyKNearest::train(Mat input){
+	cout<<"Training Data"<<endl;
 
 	Mat imageDataMat(1, 1620, CV_32FC1);
 	addHistToTrainingData(calculateHist("",input,2),imageDataMat,0);
@@ -137,7 +137,7 @@ void MyKNearest::train(Mat input){
 
 	int index = 0;
 	// cout<<"Training patentes"<<endl;
-	dir = "caracteres";
+	dir = "../../letras/caracteres";
 
 	/*dp = opendir( dir.c_str() );
 	if (dp == NULL)
@@ -164,6 +164,7 @@ void MyKNearest::train(Mat input){
 		    stream<<dir<<"/"<<letras[l]<<"_"<<i<<".png";
 
 		    filepath = stream.str();
+			//cout<<"Calculate Hist for File: "<<filepath<<endl;
 			addHistToTrainingData(calculateHist(filepath,Mat(),1),trainingDataMat,index++);
 			//cout<<"File: "<<filepath<<endl;
 		}
@@ -175,14 +176,18 @@ void MyKNearest::train(Mat input){
 
 	// estimate the response and get the neighbors' labels
     float response = knn.find_nearest(imageDataMat,K,0,0,&nearests,0);
-    if(response >= 35)
-    	return;
+    if(response >= 35) {
+		cout<<"This is no a letter o number"<<endl;
+        return -1;
+	}
 	cout<<"Response: "<<response<<" = "<<letras[(int)response]<<endl;
     // compute the number of neighbors representing the majority
     for( int k = 0; k < K; k++ )
     {
         cout<<"Vecino: "<<nearests.at<float>(0,k)<<" "<<letras[(int)nearests.at<float>(0,k)]<<endl;
     }
+
+    return (int)response;
 }
 
 /*int main( int argc, char** argv ) {
