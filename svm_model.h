@@ -1,4 +1,7 @@
 //svm_model.h
+#ifndef SVM_MODEL_H
+#define SVM_MODEL_H
+
 #include <opencv2/core/core.hpp>
 
 using namespace cv;
@@ -14,3 +17,5 @@ public:
 	void train();
 	bool is_patente(string filename_to_test, Mat image_to_test, int type);
 };
+
+#endif // SVM_MODEL_H

@@ -1,4 +1,7 @@
 //knearest.h
+#ifndef KNEAREST_H
+#define KNEAREST_H
+
 #include <opencv2/core/core.hpp>
 
 using namespace cv;
@@ -10,5 +13,7 @@ public:
 	MyKNearest();
 	Mat calculateHist(const string& imageFilename, Mat image, int type);
 	void addHistToTrainingData(Mat hist, Mat trainingDataMat, int index);
-	int train(Mat input);
+    int train(Mat input);
 };
+
+#endif // KNEAREST_H
