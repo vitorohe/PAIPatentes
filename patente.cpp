@@ -49,10 +49,10 @@ public:
 
 };
 
-int Patente::extractComponentes(Mat imageSeg, int index, int name) {
+int Patente::extractComponentes(Mat imageSeg) {
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-	Mat canny;
+
 	Mat gray;
 	cvtColor(imageSeg,gray,CV_BGR2GRAY);
 	adaptiveThreshold(gray, gray, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 5, 2);
@@ -76,7 +76,6 @@ int Patente::extractComponentes(Mat imageSeg, int index, int name) {
 	/// Draw contours
 	Mat drawing = Mat::zeros( imagen_bin_dilated.size(), CV_8UC3 );
 	drawing.setTo(Scalar(255,255,255));
-	RNG rng(12345);
 	Rect rect;
 	// if(contours.size() < 6)
 	// 	return 0;
@@ -117,7 +116,7 @@ int Patente::extractComponentes(Mat imageSeg, int index, int name) {
 //    waitKey(0);
     // dilate(drawing,drawing,element_rect);
     // dilate(drawing,drawing,element_rect);
-	img_rect = drawing(Rect(pt1.x,pt1.y,rect.width,rect.height));
+//	img_rect = drawing(Rect(pt1.x,pt1.y,rect.width,rect.height));
 //	imshow("img_rect",img_rect);
 //	waitKey(0);
     return knearest.train(img_rect);
@@ -125,13 +124,8 @@ int Patente::extractComponentes(Mat imageSeg, int index, int name) {
 }
 
 
-vector<Mat> Patente::search_patent(string filename, float factor){
-
-    Mat image = imread(filename, 1);
-    if (image.empty()) {
-        printf("Error: image '%s' is empty, features calculation skipped!\n", filename.c_str());
-        return vector<Mat>();
-    }
+vector<Mat> Patente::search_patent(Mat image, float factor){
+    cout<<"Searching patente in "<<endl;
 
 	cout<<"Looking for patente, factor: "<<factor<<endl;
 
@@ -140,8 +134,8 @@ vector<Mat> Patente::search_patent(string filename, float factor){
 	
 	int width_rect = width/factor;
 	int height_rect = width_rect/2.6;
-	// width_rect = width_rect*8/9;
-	cout<<"Sliding window: "<<height_rect<<" x "<<width_rect<<endl;
+
+    cout<<"\tSliding window: "<<height_rect<<" x "<<width_rect<<endl;
 	
 	string p;
 	Mat rect;
@@ -150,14 +144,8 @@ vector<Mat> Patente::search_patent(string filename, float factor){
 	int w_step = 0;
 	int height_init;
 	
-	// if(type == 1){
-		height_init = height/3;
-		w_step = width_rect/3;
-	// }
-	// else if(type == 2){
-	// 	height_init = 0;
-	// 	w_step = width_rect/12;
-	// }
+    height_init = height/3;
+    w_step = width_rect/3;
 	
 	vector<int> height_steps;
 
@@ -219,13 +207,13 @@ vector<Mat> Patente::search_patent(string filename, float factor){
 	}
 
 	if (index == 0 && factor < 9){
-        return search_patent(filename, factor+0.5);
+        return search_patent(image, factor+0.5);
 	}else{
 		return possible_patentes;
 	}
 }
 
-void Patente::search_final_patent(vector<Mat> possible_patentes){
+vector<int> Patente::search_final_patent(vector<Mat> possible_patentes){
     cout<<"Processing Patentes"<<endl;
 
 	// int k = 0;
@@ -237,7 +225,9 @@ void Patente::search_final_patent(vector<Mat> possible_patentes){
 //	possible_patentes.push_back(image2);
 
     Mat rect1;
+    vector<int> int_characters;
 	for(int i = 0; i < possible_patentes.size(); i++){
+        int_characters.clear();
 		cout<<"Patente "<<i<<endl;
 //		imshow("possible pat", possible_patentes[i]);
 //		waitKey(0);
@@ -265,7 +255,7 @@ void Patente::search_final_patent(vector<Mat> possible_patentes){
 			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
 //			imshow("more possible pat", rect1);
 //			waitKey(0);
-			result = extractComponentes(rect1,0,3);
+            result = extractComponentes(rect1);
 			if(result != -1){
 				init = j;
 				break;
@@ -280,7 +270,7 @@ void Patente::search_final_patent(vector<Mat> possible_patentes){
 			rect1 = possible_patentes[i](Rect(j-1-possible_patentes[i].size().width/7,0,(possible_patentes[i].size().width/7)+2,possible_patentes[i].size().height));
 //			imshow("more possible pat", rect1);
 //			waitKey(0);
-			result = extractComponentes(rect1,0,3);
+            result = extractComponentes(rect1);
 			if(result != -1){
 				fin = j;
 				break;
@@ -292,12 +282,13 @@ void Patente::search_final_patent(vector<Mat> possible_patentes){
 //		waitKey(0);
 		// return;
 		int k = 1;
+
 		for (int j = init; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += possible_patentes[i].size().width/7+2)
 		{
 			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
 //			imshow("more possible pat", rect1);
 //			waitKey(0);
-			extractComponentes(rect1,0,3);
+            int_characters.push_back(extractComponentes(rect1));
 			if(j+possible_patentes[i].size().width/7+2 >= possible_patentes[i].size().width)
 				j = possible_patentes[i].size().width - possible_patentes[i].size().width/7+2;
 			if(k%2 == 0)
@@ -306,6 +297,7 @@ void Patente::search_final_patent(vector<Mat> possible_patentes){
 		}
 	}
 	cout<<"Searching patente finished"<<endl;
+    return int_characters;
 
 }
 
@@ -442,89 +434,6 @@ void Patente::findCharacters(string filename,int name){
 	i = extractCharacters(image3, i, letras, name);
 }
 
-void Patente::segment_image(string filename){
-	Mat imagen = imread(filename, -1);
-
-	if(imagen.empty()){
-		cout<<"ERROR: La imagen "<<filename<<" no pudo ser abierta"<<endl;
-		exit(EXIT_FAILURE);
-	}
-	resize(imagen, imagen, Size(130,40), 0, 0, INTER_LANCZOS4);
-	//imshow("imagen",imagen);
-	//waitKey(0);
-	return;
-	
-	string window_name = "Sobel Demo - Simple Edge Detector";
-	int scale = 1;
-	int delta = 0;
-	int ddepth = CV_16S;
-
-	GaussianBlur( imagen, imagen, Size(3,3), 0, 0, BORDER_DEFAULT );
-	Mat src_gray;
-	/// Convert it to gray
-	cvtColor( imagen, src_gray, CV_RGB2GRAY );
-
-	/// Create window
-	namedWindow( window_name, CV_WINDOW_AUTOSIZE );
-
-	/// Generate grad_x and grad_y
-	Mat grad_x, grad_y;
-	Mat abs_grad_x, abs_grad_y;
-
-	/// Gradient X
-	//Scharr( src_gray, grad_x, ddepth, 1, 0, scale, delta, BORDER_DEFAULT );
-	Sobel( src_gray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
-	convertScaleAbs( grad_x, abs_grad_x );
-
-	/// Gradient Y
-	//Scharr( src_gray, grad_y, ddepth, 0, 1, scale, delta, BORDER_DEFAULT );
-	Sobel( src_gray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
-	convertScaleAbs( grad_y, abs_grad_y );
-	Mat grad;
-	/// Total Gradient (approximate)
-	addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, grad );
-
-	//imshow( window_name, grad );
-
-	//waitKey(0);
-}
-
-void Patente::feature_detection(string filename, string filename2){
-	Mat img_1 = imread( filename, CV_LOAD_IMAGE_GRAYSCALE );
-	Mat img_2 = imread( filename2, CV_LOAD_IMAGE_GRAYSCALE );
-
-	if( !img_1.data || !img_2.data )
-	{ return ; }
-
-	//-- Step 1: Detect the keypoints using SURF Detector
-	int minHessian = 400;
-
-	SurfFeatureDetector detector( minHessian );
-
-	std::vector<KeyPoint> keypoints_1, keypoints_2;
-
-	detector.detect( img_1, keypoints_1 );
-	detector.detect( img_2, keypoints_2 );
-
-	//-- Step 2: Calculate descriptors (feature vectors)
-	SurfDescriptorExtractor extractor;
-
-	Mat descriptors_1, descriptors_2;
-
-	extractor.compute( img_1, keypoints_1, descriptors_1 );
-	extractor.compute( img_2, keypoints_2, descriptors_2 );
-
-	//-- Step 3: Matching descriptor vectors with a brute force matcher
-	BFMatcher matcher(NORM_L2);
-	std::vector< DMatch > matches;
-	matcher.match( descriptors_1, descriptors_2, matches );
-
-	//-- Draw matches
-	Mat img_matches;
-	drawMatches( img_1, keypoints_1, img_2, keypoints_2, matches, img_matches );
-
-	//-- Show detected matches
-	//imshow("Matches", img_matches );
-
-	//waitKey(0);
+vector<string> Patente::get_string_characters_from_int(vector<int> int_characters){
+    return knearest.get_string_characters_from_int(int_characters);
 }

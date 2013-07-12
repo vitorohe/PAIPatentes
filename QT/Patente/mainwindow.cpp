@@ -19,13 +19,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::animateLoading(){
     QMovie *movie = new QMovie("../../style/ajax-loader.gif");
-//    QLabel *processLabel = new QLabel(this);
-    ui->patente->setMovie(movie);
+    ui->patente_img->setMovie(movie);
     movie->start();
 }
 
 void MainWindow::openImage()
 {
+    ui->patente_label->setText("XX XX XX");
     fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
     charFileName = fileName.toLocal8Bit().data();
 
@@ -36,15 +36,32 @@ void MainWindow::openImage()
     ui->lblImage->setScaledContents(true);
 
     animateLoading();
-
     patente = Patente();
 
-    vector<Mat> possible_patentes = patente.search_patent(charFileName,3);
-    Mat img_patente = possible_patentes[0];
-    qimgNew = QImage((uchar *)img_patente.data,img_patente.cols,img_patente.rows,img_patente.step,QImage::Format_RGB888).rgbSwapped();
-    ui->patente->setPixmap(QPixmap::fromImage(qimgNew));
-    ui->patente->setScaledContents(true);
-    patente.search_final_patent(possible_patentes);
+    vector<Mat> possible_patentes = patente.search_patent(img,3);
+    if(possible_patentes.size() > 0){
+        Mat img_patente = possible_patentes[0];
+        qimgNew = QImage((uchar *)img_patente.data,img_patente.cols,img_patente.rows,img_patente.step,QImage::Format_RGB888).rgbSwapped();
+        ui->patente_img->setPixmap(QPixmap::fromImage(qimgNew));
+        ui->patente_img->setScaledContents(true);
+
+        vector<int> int_characters = patente.search_final_patent(possible_patentes);
+        vector<string> string_characters = patente.get_string_characters_from_int(int_characters);
+
+        string patente_characters = "";
+        for(int i = 0; i < string_characters.size(); i++){
+            if(i%2 == 0)
+                patente_characters += " ";
+
+            patente_characters += string_characters[i];
+        }
+
+        ui->patente_label->setText(QString::fromStdString(patente_characters));
+    }
+    else{
+        ui->patente_img->setText("Patente not found");
+    }
+
 }
 
 void MainWindow::testImage()

@@ -157,7 +157,6 @@ int MyKNearest::train(Mat input){
 
 	closedir( dp );*/
 
-	string letras [35] = {"A","B","C","D","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","1","2","3","4","5","6","7","8","9","0"};
 	for(int l = 0; l < 35; l++) {
 		for(int i = 1; i < 18; i++) {
 			std::stringstream stream;
@@ -190,97 +189,14 @@ int MyKNearest::train(Mat input){
     return (int)response;
 }
 
-/*int main( int argc, char** argv ) {
-	string imagepath = argv[1];
-	
-	train(imagepath);
-	return 0;
+vector<string> MyKNearest::get_string_characters_from_int(vector<int> int_characters){
+    vector<string> string_characters;
+    for(int i = 0; i < int_characters.size(); i++){
+        if(int_characters[i] != -1)
+            string_characters.push_back(letras[int_characters[i]]);
+        else
+            string_characters.push_back("?");
+    }
+
+    return string_characters;
 }
-
-int main2( int argc, char** argv )
-{
-    const int K = 10;
-    int i, j, k, accuracy;
-    float response;
-    int train_sample_count = 100;
-    CvRNG rng_state = cvRNG(-1);
-    CvMat* trainData = cvCreateMat( train_sample_count, 2, CV_32FC1 );
-    CvMat* trainClasses = cvCreateMat( train_sample_count, 1, CV_32FC1 );
-    IplImage* img = cvCreateImage( cvSize( 500, 500 ), 8, 3 );
-    float _sample[2];
-    CvMat sample = cvMat( 1, 2, CV_32FC1, _sample );
-    cvZero( img );
-
-    CvMat trainData1, trainData2, trainClasses1, trainClasses2;
-
-	//cout<<"trainData:"<<(Mat)trainData<<endl;
-
-    // form the training samples
-    cvGetRows( trainData, &trainData1, 0, train_sample_count/2 );
-	//cout<<"trainData1:"<<(Mat)&trainData1<<endl;
-    cvRandArr( &rng_state, &trainData1, CV_RAND_NORMAL, cvScalar(200,200), cvScalar(50,50) );
-	//cout<<"trainData1:"<<(Mat)&trainData1<<endl;
-
-	//cout<<"trainData:"<<(Mat)trainData<<endl;
-
-    cvGetRows( trainData, &trainData2, train_sample_count/2, train_sample_count );
-    cvRandArr( &rng_state, &trainData2, CV_RAND_NORMAL, cvScalar(300,300), cvScalar(50,50) );
-	//cout<<"trainData2:"<<(Mat)&trainData2<<endl;
-
-	//cout<<"trainData:"<<(Mat)trainData<<endl;
-
-    cvGetRows( trainClasses, &trainClasses1, 0, train_sample_count/2 );
-    cvSet( &trainClasses1, cvScalar(1) );
-
-    cvGetRows( trainClasses, &trainClasses2, train_sample_count/2, train_sample_count );
-    cvSet( &trainClasses2, cvScalar(2) );
-
-//	cout<<"trainClasses:"<<(Mat)trainClasses<<endl;
-
-    // learn classifier
-    CvKNearest knn( trainData, trainClasses, 0, false, K );
-    CvMat* nearests = cvCreateMat( 1, K, CV_32FC1);
-
-    for( i = 0; i < img->height; i++ )
-    {
-        for( j = 0; j < img->width; j++ )
-        {
-            sample.data.fl[0] = (float)j;
-            sample.data.fl[1] = (float)i;
-
-            // estimate the response and get the neighbors' labels
-            response = knn.find_nearest(&sample,K,0,0,nearests,0);
-
-            // compute the number of neighbors representing the majority
-            for( k = 0, accuracy = 0; k < K; k++ )
-            {
-                if( nearests->data.fl[k] == response)
-                    accuracy++;
-            }
-            // highlight the pixel depending on the accuracy (or confidence)
-            cvSet2D( img, i, j, response == 1 ?
-                (accuracy > 5 ? CV_RGB(180,0,0) : CV_RGB(180,120,0)) :
-                (accuracy > 5 ? CV_RGB(0,180,0) : CV_RGB(120,120,0)) );
-        }
-    }
-
-    // display the original training samples
-    for( i = 0; i < train_sample_count/2; i++ )
-    {
-        CvPoint pt;
-        pt.x = cvRound(trainData1.data.fl[i*2]);
-        pt.y = cvRound(trainData1.data.fl[i*2+1]);
-        cvCircle( img, pt, 2, CV_RGB(255,0,0), CV_FILLED );
-        pt.x = cvRound(trainData2.data.fl[i*2]);
-        pt.y = cvRound(trainData2.data.fl[i*2+1]);
-        cvCircle( img, pt, 2, CV_RGB(0,255,0), CV_FILLED );
-    }
-
-    cvNamedWindow( "classifier result", 1 );
-    cvShowImage( "classifier result", img );
-    cvWaitKey(0);
-
-    cvReleaseMat( &trainClasses );
-    cvReleaseMat( &trainData );
-    return 0;
-}*/

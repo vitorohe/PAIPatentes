@@ -28,7 +28,7 @@
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
-      <string>Tab 1</string>
+      <string>Search Patente</string>
      </attribute>
      <widget class="QPushButton" name="btnOpen">
       <property name="geometry">
@@ -56,7 +56,7 @@
        <string>Reset</string>
       </property>
      </widget>
-     <widget class="QLabel" name="patente">
+     <widget class="QLabel" name="patente_img">
       <property name="geometry">
        <rect>
         <x>260</x>
@@ -88,10 +88,30 @@
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QLabel" name="patente_label">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>160</y>
+        <width>101</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-color: rgb(255, 255, 255);
+font: 12pt &quot;FreeSans&quot;;</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_2">
      <attribute name="title">
-      <string>Tab 2</string>
+      <string>SVM Model</string>
      </attribute>
      <widget class="QPushButton" name="btnTrain">
       <property name="geometry">
