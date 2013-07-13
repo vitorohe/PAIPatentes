@@ -175,7 +175,7 @@ vector<Mat> Patente::search_patent(Mat image, float factor){
 					continue;
 
 				index++;
-				imwrite("partes/parte" + s + ".jpg",rect2);
+//				imwrite("partes/parte" + s + ".jpg",rect2);
 				// add possible patente to vector
 				possible_patentes.push_back(rect2);
 			}

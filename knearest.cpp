@@ -44,26 +44,10 @@ Mat MyKNearest::calculateHist(const string& imageFilename, Mat image, int type){
 	// cout<<"hola2"<<endl;
 	vector<Mat> bgr_planes;
 	split( imageSeg, bgr_planes );
-
-	/// Establish the number of bins
-	int histSize = 256;
-	// cout<<"hola3"<<endl;
-	/// Set the ranges ( for B,G,R) )
-	float range[] = { 0, 256 } ;
-	const float* histRange = { range };
-
-	bool uniform = true; bool accumulate = false;
-
-	Mat b_hist, g_hist, r_hist, bin_hist, img1_hist, img2_hist, img3_hist, img4_hist, img5_hist, img6_hist;
-
-	/// Compute the histograms:
-	// calcHist( &bgr_planes[0], 1, 0, Mat(), b_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &bgr_planes[1], 1, 0, Mat(), g_hist, 1, &histSize, &histRange, uniform, accumulate );
-	// calcHist( &bgr_planes[2], 1, 0, Mat(), r_hist, 1, &histSize, &histRange, uniform, accumulate );
 	
-	Mat binario;
+
 	resize(imageSeg, imageSeg, Size(40,60), 0, 0, INTER_CUBIC);
-	//GaussianBlur( imageSeg, imageSeg, Size(3,3), 0, 0, BORDER_DEFAULT );
+
 	// cvtColor(imageSeg,binario,CV_BGR2GRAY);
 	// threshold(binario, binario, (double)Funciones::umbralOtsu(imageSeg), 255, THRESH_BINARY);
 	// adaptiveThreshold(binario, binario, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 7, 15);
@@ -84,10 +68,6 @@ Mat MyKNearest::calculateHist(const string& imageFilename, Mat image, int type){
 	{
 		hog_mat.at<float>(i,0) = ders.at(i);
 	}
-	//cout<<ders.size()<<endl;
-
-	// cout<<hog_mat<<endl;
-	// exit(0);
 
 	// Mat hist(1,256*6,CV_32F);
 	Mat hist(1,1620,CV_32F);
@@ -138,24 +118,6 @@ int MyKNearest::train(Mat input){
 	int index = 0;
 	// cout<<"Training patentes"<<endl;
 	dir = "../../letras/caracteres";
-
-	/*dp = opendir( dir.c_str() );
-	if (dp == NULL)
-	{
-		cout << "Error(" << errno << ") opening " << dir << endl;
-	}
-
-	while ((dirp = readdir( dp )))
-	{
-		filepath = dir + "/" + dirp->d_name;
-		cout<<"File: "<<filepath<<endl;
-	// If the file is a directory (or is in some way invalid) we'll skip it 
-		if (stat( filepath.c_str(), &filestat )) continue;
-		if (S_ISDIR( filestat.st_mode ))         continue;
-		addHistToTrainingData(calculateHist(filepath,Mat(),1),trainingDataMat,index++);
-	}
-
-	closedir( dp );*/
 
 	for(int l = 0; l < 35; l++) {
 		for(int i = 1; i < 18; i++) {

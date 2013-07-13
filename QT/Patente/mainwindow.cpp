@@ -72,16 +72,20 @@ void MainWindow::testImage()
 {
     fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
     charFileName = fileName.toLocal8Bit().data();
-    iplImg_test = cvLoadImage(charFileName);
-    Mat image(iplImg_test);
-    svm_model.is_patente("",image,2);
+    Mat image = imread(charFileName,1);
+    if(svm_model.is_patente("",image,2))
+        ui->is_patente_label->setText("IS patente");
+    else
+        ui->is_patente_label->setText("is NOT patente");
 }
 
 void MainWindow::trainModel(){
+    ui->train_label->setText("Training model...");
     ui->btnTrain->setEnabled(false);
     svm_model = SVM_Model();
     svm_model.train();
     ui->btnTrain->setEnabled(true);
+    ui->train_label->setText("Training finished");
 }
 
 void MainWindow::on_btnOpen_clicked()

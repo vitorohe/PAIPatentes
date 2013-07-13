@@ -23,6 +23,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void searchPatente(Mat img);
     void openImage();
     void trainModel();
     void testImage();
