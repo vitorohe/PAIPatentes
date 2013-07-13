@@ -23,18 +23,7 @@ void MainWindow::animateLoading(){
     movie->start();
 }
 
-void MainWindow::openImage()
-{
-    ui->patente_label->setText("XX XX XX");
-    fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
-    charFileName = fileName.toLocal8Bit().data();
-
-    Mat img = imread(charFileName,1);
-    qimgNew = QImage((uchar *)img.data,img.cols,img.rows,img.step,QImage::Format_RGB888).rgbSwapped();
-
-    ui->lblImage->setPixmap(QPixmap::fromImage(qimgNew));
-    ui->lblImage->setScaledContents(true);
-
+void MainWindow::searchPatente(Mat img){
     animateLoading();
     patente = Patente();
 
@@ -62,6 +51,21 @@ void MainWindow::openImage()
         ui->patente_img->setText("Patente not found");
     }
 
+}
+
+void MainWindow::openImage()
+{
+    ui->patente_label->setText("XX XX XX");
+    fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
+    charFileName = fileName.toLocal8Bit().data();
+
+    Mat img = imread(charFileName,1);
+    qimgNew = QImage((uchar *)img.data,img.cols,img.rows,img.step,QImage::Format_RGB888).rgbSwapped();
+
+    ui->lblImage->setPixmap(QPixmap::fromImage(qimgNew));
+    ui->lblImage->setScaledContents(true);
+
+    searchPatente(img);
 }
 
 void MainWindow::testImage()

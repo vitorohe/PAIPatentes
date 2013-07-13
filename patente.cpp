@@ -49,26 +49,24 @@ public:
 
 };
 
-int Patente::extractComponentes(Mat imageSeg) {
+int Patente::extractComponentes(Mat imageSeg, int width, int height, bool extreme) {
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 
 	Mat gray;
 	cvtColor(imageSeg,gray,CV_BGR2GRAY);
-	adaptiveThreshold(gray, gray, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 5, 2);
-//	imshow("imageSeg",gray);
-	
-	// Canny( gray, canny, 100, 100*2, 3 );
-	// imshow("Canny", canny);
-	// waitKey(0);
-	// return 0;
+    adaptiveThreshold(gray, gray, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 7, 15);
+//    imshow("imageSeg",gray);
+//     waitKey(0);
 
-	Mat element_rect = getStructuringElement(MORPH_RECT, Size(2,1));
-	// Mat imagen_bin_dilated;
-	Mat imagen_bin_dilated = gray.clone();
+    Mat element_rect = getStructuringElement(MORPH_RECT, Size(3,2));
+    Mat imagen_bin_dilated;
+//	Mat imagen_bin_dilated = gray.clone();
 
 	// erode(canny,imagen_bin_dilated,element_rect);
-	// dilate(canny,imagen_bin_dilated,element_rect);
+    dilate(gray,imagen_bin_dilated,element_rect);
+//    imshow("imagdilate",imagen_bin_dilated);
+//    waitKey(0);
 	// dilate(imagen_bin_dilated,imagen_bin_dilated,element_rect);
 
 	findContours( imagen_bin_dilated, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
@@ -77,55 +75,45 @@ int Patente::extractComponentes(Mat imageSeg) {
 	Mat drawing = Mat::zeros( imagen_bin_dilated.size(), CV_8UC3 );
 	drawing.setTo(Scalar(255,255,255));
 	Rect rect;
-	// if(contours.size() < 6)
-	// 	return 0;
-	// for( int i = 0; i< contours.size(); i++ )
-	// {
 
-		rect = boundingRect(contours[0]);
-		cout<<"limit: "<<imageSeg.size().height/2 + imageSeg.size().height/5<<endl;
-		cout<<"rect h "<<rect.height<<endl;
-		if(rect.height > imageSeg.size().height/2 + imageSeg.size().height/5)
-			return -1;
-		
-		Point pt1,pt2;
-		pt1.x = rect.x;
-		pt1.y = rect.y;
-		pt2.x = rect.x + rect.width;
-		pt2.y = rect.y + rect.height;
+    rect = boundingRect(contours[0]);
 
-		Mat img_rect = imageSeg(Rect(pt1.x,pt1.y,rect.width,rect.height));
-		
-		// if(img_rect.size().height > img_rect.size().width/2)
-		// 	continue;
-		// if(!is_patente("",img_rect,2))
-		// 	continue;
-		// imshow("img_rect",img_rect);
-		// waitKey(0);
-		// ostringstream string_i;
-		// string_i <<"letras/c/comp_"<<name<<"_"<<index++<<".png";
-		// string s(string_i.str());
-		// imwrite(s,img_rect);
-		Scalar color = Scalar( 0,0,0);
-		drawContours( drawing, contours, 0, color, CV_FILLED, 8, hierarchy, 0, Point() );
-	// }
+//    cout<<"rect h "<<rect.height<<endl;
+//    cout<<"rect w "<<rect.width<<endl;
+
+//    cout<<"limit up h: "<<height/2 + height/5<<endl;
+    if(rect.height > height/2 + height/5)
+        return -1;
+
+//    cout<<"limit down h: "<<height/3 - 3<<endl;
+    if(rect.height < height/3 - 3)
+        return -1;
+
+//    cout<<"limit down w: "<<width/9-5<<endl;
+    if(extreme && rect.width < width/9-5)
+        return -1;
+
+    Point pt1,pt2;
+    pt1.x = rect.x;
+    pt1.y = rect.y;
+    pt2.x = rect.x + rect.width;
+    pt2.y = rect.y + rect.height;
+
+    Mat img_rect = imageSeg(Rect(pt1.x,pt1.y,rect.width,rect.height));
+
+    Scalar color = Scalar( 0,0,0);
+    drawContours( drawing, contours, 0, color, CV_FILLED, 8, hierarchy, 0, Point() );
 
 	/// Show in a window
-	//namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-	//imshow( "Contours", drawing );
+
+//    imshow("img_rect",img_rect);
 //    waitKey(0);
-    // dilate(drawing,drawing,element_rect);
-    // dilate(drawing,drawing,element_rect);
-//	img_rect = drawing(Rect(pt1.x,pt1.y,rect.width,rect.height));
-//	imshow("img_rect",img_rect);
-//	waitKey(0);
     return knearest.train(img_rect);
-//	return 1;
 }
 
 
 vector<Mat> Patente::search_patent(Mat image, float factor){
-    cout<<"Searching patente in "<<endl;
+    cout<<"\nSearching patente in "<<endl;
 
 	cout<<"Looking for patente, factor: "<<factor<<endl;
 
@@ -149,10 +137,6 @@ vector<Mat> Patente::search_patent(Mat image, float factor){
 	
 	vector<int> height_steps;
 
-	// for (int i = 6; i < 11; i = i+2)
-	// {
-	// 	height_steps.push_back((height_rect/20)*i);
-	// }
 	height_steps.push_back(height_rect/3);
 
 	vector<Mat> possible_patentes;
@@ -186,14 +170,10 @@ vector<Mat> Patente::search_patent(Mat image, float factor){
 				}
 
 				rect2 = image(Rect(j,i,width_rect,height_rect));
-				// Mat pat;
-				// cvtColor(rect2,pat,CV_BGR2GRAY);
-				// threshold(pat, pat, (double)Funciones::umbralOtsu(pat), 255, THRESH_BINARY);
-				// imshow("rect2",rect2);
-				// waitKey(0);
+
 				if(!svm_model.is_patente("",rect2,2))
 					continue;
-				// extractComponentes(rect2, 0, index);
+
 				index++;
 				imwrite("partes/parte" + s + ".jpg",rect2);
 				// add possible patente to vector
@@ -216,86 +196,72 @@ vector<Mat> Patente::search_patent(Mat image, float factor){
 vector<int> Patente::search_final_patent(vector<Mat> possible_patentes){
     cout<<"Processing Patentes"<<endl;
 
-	// int k = 0;
-	
-//	Mat image2 = imread("/home/ivan/Documentos/Ramos_U/ProcesamientoAnalisisImagenes/PAIPatentes/patente0046.jpg", 1);
-//	if (image2.empty()) {
-//		return;
-//	}
-//	possible_patentes.push_back(image2);
-
     Mat rect1;
     vector<int> int_characters;
+    int width, width2, height;
 	for(int i = 0; i < possible_patentes.size(); i++){
+        width = possible_patentes[i].size().width;
+        width2 = width;
+        height = possible_patentes[i].size().height;
         int_characters.clear();
-		cout<<"Patente "<<i<<endl;
-//		imshow("possible pat", possible_patentes[i]);
-//		waitKey(0);
-		// for(int k = 0; k < factors.size(); k++){
-		// 	more_possible_patentes = search_patent(possible_patentes[i],possible_patentes[i],factors[k],2);
+//		cout<<"Patente "<<i<<endl;
 
-		// 	for(int j = 0; j < more_possible_patentes.size(); j++){
-		// 		imshow("more possible pat", more_possible_patentes[j]);
-		// 		waitKey(0);
-		// 	}
-		// }
-		// for (int j = 0; j < 10; ++j)
-		// {
-		// 	rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width-1-j,possible_patentes[i].size().height));
-		// 	if(svm_model.is_patente("",rect1,2)){
-		// 		imshow("more possible pat", rect1);
-		// 		waitKey(0);
-		// 	}
-		// }
 		int init = 0;
 		int result;
 
-		for (int j = 0; j < 30; j += 3)
+        for (int j = 0; j < width2/2; j += 3)
 		{
-			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
-//			imshow("more possible pat", rect1);
-//			waitKey(0);
-            result = extractComponentes(rect1);
+            rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
+            result = extractComponentes(rect1,width,height,true);
+            init = j;
+            possible_patentes[i] = possible_patentes[i](Rect(init,0,possible_patentes[i].size().width-init-1,possible_patentes[i].size().height-1));
+            width = possible_patentes[i].size().width;
 			if(result != -1){
-				init = j;
 				break;
 			}
 		}
-		cout<<"init: "<<init<<endl;
-		possible_patentes[i] = possible_patentes[i](Rect(init,0,possible_patentes[i].size().width-init-1,possible_patentes[i].size().height-1));
-		int fin;
+//		cout<<"init: "<<init<<endl;
 
-		for (int j = possible_patentes[i].size().width-1; j > possible_patentes[i].size().width/2; j -= 3)
+//        imshow("more possible pat", possible_patentes[i]);
+//        waitKey(0);
+
+        int fin;
+        int final_result;
+        for (int j = possible_patentes[i].size().width-1; j > width2/2; j -= 3)
 		{
-			rect1 = possible_patentes[i](Rect(j-1-possible_patentes[i].size().width/7,0,(possible_patentes[i].size().width/7)+2,possible_patentes[i].size().height));
-//			imshow("more possible pat", rect1);
-//			waitKey(0);
-            result = extractComponentes(rect1);
-			if(result != -1){
-				fin = j;
+            rect1 = possible_patentes[i](Rect(j-1-possible_patentes[i].size().width/7,0,(possible_patentes[i].size().width/7)+2,possible_patentes[i].size().height));
+            result = extractComponentes(rect1,width,height,true);
+            fin = j;
+            possible_patentes[i] = possible_patentes[i](Rect(0,0,fin+1,possible_patentes[i].size().height-1));
+            width = possible_patentes[i].size().width;
+            if(result != -1){
+                final_result = result;
 				break;
 			}
 		}
-		possible_patentes[i] = possible_patentes[i](Rect(0,0,fin+1,possible_patentes[i].size().height-1));
+//        cout<<"fin: "<<fin<<endl;
 
-//		imshow("possible pat", possible_patentes[i]);
-//		waitKey(0);
-		// return;
+//        imshow("more possible pat", possible_patentes[i]);
+//        waitKey(0);
+
 		int k = 1;
 
-		for (int j = init; j + possible_patentes[i].size().width/7+2 < possible_patentes[i].size().width; j += possible_patentes[i].size().width/7+2)
+        for (int j = 0; j + width/7+2 < width; j += width/7+2)
 		{
-			rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
-//			imshow("more possible pat", rect1);
-//			waitKey(0);
-            int_characters.push_back(extractComponentes(rect1));
-			if(j+possible_patentes[i].size().width/7+2 >= possible_patentes[i].size().width)
-				j = possible_patentes[i].size().width - possible_patentes[i].size().width/7+2;
-			if(k%2 == 0)
-				j+=3;
+            rect1 = possible_patentes[i](Rect(j,0,possible_patentes[i].size().width/7+2,possible_patentes[i].size().height));
+            int_characters.push_back(extractComponentes(rect1,width,height,false));
+            if(j+possible_patentes[i].size().width/7+2 >= possible_patentes[i].size().width)
+                j = possible_patentes[i].size().width - possible_patentes[i].size().width/7+2;
+            if(k == 2)
+                j+=width/13-2;
+            else if(k == 4)
+                j+=width/13-4;
 			k++;
 		}
+        int_characters.push_back(final_result);
 	}
+
+
 	cout<<"Searching patente finished"<<endl;
     return int_characters;
 

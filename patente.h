@@ -16,7 +16,7 @@ public:
 	MyKNearest knearest;
 
 	Patente();
-    int extractComponentes(Mat imageSeg);
+    int extractComponentes(Mat imageSeg, int width, int height, bool extrem);
     vector<Mat> search_patent(Mat img, float factor);
     vector<int> search_final_patent(vector<Mat> possible_patentes);
 	int cut_no_patente(string dir);
