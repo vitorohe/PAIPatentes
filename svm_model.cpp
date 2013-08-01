@@ -179,6 +179,7 @@ void SVM_Model::train(){
      CvSVM SVM;
      SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
      SVM.save("model.xml");
+     cout<<"Training Finished"<<endl;
 }
 
 bool SVM_Model::is_patente(string filename_to_test, Mat image_to_test, int type){

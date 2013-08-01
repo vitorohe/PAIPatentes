@@ -1,3 +1,7 @@
+El modelo SVM no está incluido en el zip por temas de tamaño.
+Al ejecutar el entrenamiento del modelo (descrito abajo) se generará un archivo llamado model.xml.
+
+
 Modo gráfico:
 
 	El proyecto cuenta con una interfaz gráfica en Qt. Viene una carpeta llamada QT con un archivo .pro, Patente.pro que es el que permite abrirlo en qtCreator.

@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-
+#include "ui_mainwindow.h"
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
@@ -27,7 +27,7 @@ private slots:
     void openImage();
     void trainModel();
     void testImage();
-    void animateLoading();
+    void animateLoading(QLabel *label);
     void on_btnOpen_clicked();
     void on_btnReset_clicked();
     void on_btnTrain_clicked();

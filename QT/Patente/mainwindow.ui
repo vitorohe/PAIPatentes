@@ -7,11 +7,18 @@
     <x>0</x>
     <y>0</y>
     <width>462</width>
-    <height>348</height>
+    <height>329</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>false</bool>
+  </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>PAIPatentes</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../../style/P_4.png</normaloff>../../style/P_4.png</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QTabWidget" name="tabWidget">
@@ -143,7 +150,7 @@ font: 12pt &quot;FreeSans&quot;;</string>
       <property name="geometry">
        <rect>
         <x>240</x>
-        <y>120</y>
+        <y>180</y>
         <width>121</width>
         <height>18</height>
        </rect>
@@ -171,12 +178,34 @@ font: 12pt &quot;FreeSans&quot;;</string>
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
+     <widget class="QLabel" name="patente_img_test">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>80</y>
+        <width>141</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
      <zorder>btnTrain</zorder>
      <zorder>btnTest</zorder>
      <zorder>train_label</zorder>
      <zorder>is_patente_label</zorder>
+     <zorder>patente_img_test</zorder>
     </widget>
    </widget>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
@@ -188,15 +217,6 @@ font: 12pt &quot;FreeSans&quot;;</string>
     </rect>
    </property>
   </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-  </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

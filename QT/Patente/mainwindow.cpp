@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setFixedSize(this->size());
 }
 
 MainWindow::~MainWindow()
@@ -17,14 +18,15 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::animateLoading(){
+void MainWindow::animateLoading(QLabel *label){
     QMovie *movie = new QMovie("../../style/ajax-loader.gif");
-    ui->patente_img->setMovie(movie);
+    label->setMovie(movie);
     movie->start();
+//    QCoreApplication::processEvents();
 }
 
 void MainWindow::searchPatente(Mat img){
-    animateLoading();
+//    animateLoading(ui->patente_img);
     patente = Patente();
 
     vector<Mat> possible_patentes = patente.search_patent(img,3);
@@ -33,7 +35,7 @@ void MainWindow::searchPatente(Mat img){
         qimgNew = QImage((uchar *)img_patente.data,img_patente.cols,img_patente.rows,img_patente.step,QImage::Format_RGB888).rgbSwapped();
         ui->patente_img->setPixmap(QPixmap::fromImage(qimgNew));
         ui->patente_img->setScaledContents(true);
-
+        QCoreApplication::processEvents();
         vector<int> int_characters = patente.search_final_patent(possible_patentes);
         vector<string> string_characters = patente.get_string_characters_from_int(int_characters);
 
@@ -55,8 +57,21 @@ void MainWindow::searchPatente(Mat img){
 
 void MainWindow::openImage()
 {
+    QFileDialog dialog(this);
+
+    dialog.setNameFilter(tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
+    dialog.setDirectory(QDir::currentPath());
+    dialog.setWindowTitle("Open Image");
+    QStringList fileNames;
+    if (dialog.exec()){
+        fileNames = dialog.selectedFiles();
+        dialog.close();
+    }
+    fileName = fileNames.at(0);
+
     ui->patente_label->setText("XX XX XX");
-    fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
+    ui->patente_img->setText("Looking for...");
+    //fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
     charFileName = fileName.toLocal8Bit().data();
 
     Mat img = imread(charFileName,1);
@@ -64,15 +79,33 @@ void MainWindow::openImage()
 
     ui->lblImage->setPixmap(QPixmap::fromImage(qimgNew));
     ui->lblImage->setScaledContents(true);
-
+    QCoreApplication::processEvents();
     searchPatente(img);
 }
 
 void MainWindow::testImage()
 {
-    fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
+
+    QFileDialog dialog(this);
+
+    dialog.setNameFilter(tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
+    dialog.setDirectory(QDir::currentPath());
+    dialog.setWindowTitle("Open Image");
+    QStringList fileNames;
+    if (dialog.exec()){
+        fileNames = dialog.selectedFiles();
+        dialog.close();
+    }
+    fileName = fileNames.at(0);
+
+    //fileName = QFileDialog::getOpenFileName(this,tr("Open Image"),QDir::currentPath(),tr("Image Files [ *.jpg , *.jpeg , *.bmp , *.png , *.gif]"));
     charFileName = fileName.toLocal8Bit().data();
     Mat image = imread(charFileName,1);
+    qimgNew = QImage((uchar *)image.data,image.cols,image.rows,image.step,QImage::Format_RGB888).rgbSwapped();
+
+    ui->patente_img_test->setPixmap(QPixmap::fromImage(qimgNew));
+    ui->patente_img_test->setScaledContents(true);
+
     if(svm_model.is_patente("",image,2))
         ui->is_patente_label->setText("IS patente");
     else
@@ -80,8 +113,9 @@ void MainWindow::testImage()
 }
 
 void MainWindow::trainModel(){
-    ui->train_label->setText("Training model...");
     ui->btnTrain->setEnabled(false);
+    ui->train_label->setText("Training...");
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     svm_model = SVM_Model();
     svm_model.train();
     ui->btnTrain->setEnabled(true);
@@ -96,6 +130,8 @@ void MainWindow::on_btnOpen_clicked()
 void MainWindow::on_btnReset_clicked()
 {
     ui->lblImage->clear();
+    ui->patente_img->setText("Patente");
+    ui->patente_label->setText("XX XX XX");
 }
 
 void MainWindow::on_btnTrain_clicked()
