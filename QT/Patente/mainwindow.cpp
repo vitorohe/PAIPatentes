@@ -66,6 +66,8 @@ void MainWindow::openImage()
     if (dialog.exec()){
         fileNames = dialog.selectedFiles();
         dialog.close();
+    }else{
+        return;
     }
     fileName = fileNames.at(0);
 
@@ -95,6 +97,9 @@ void MainWindow::testImage()
     if (dialog.exec()){
         fileNames = dialog.selectedFiles();
         dialog.close();
+    }
+    else{
+        return;
     }
     fileName = fileNames.at(0);
 
